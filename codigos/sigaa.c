@@ -79,14 +79,12 @@ typedef struct {
 
 //parte para validar
 
-void Situacao (int resto[], Aluno* aluno) //essa função descreve os critérios estabelecidos pela professora
-{
+void Situacao (int resto[], Aluno* aluno) {//essa função descreve os critérios estabelecidos pela professora{
     wprintf(L"=============================CRITÉRIOS=============================\n");
     
     wprintf(L"-> Máximo de disciplinas por semestre será de ");
     
-    switch (resto[0])
-    {
+    switch (resto[0]){
         case 0:
             wprintf(L"3 disciplinas\n");
             break;
@@ -105,8 +103,7 @@ void Situacao (int resto[], Aluno* aluno) //essa função descreve os critérios
 
     wprintf(L"-> A solicitação de professores será: ");
 
-    switch (resto[1])
-    {
+    switch (resto[1]) {
         case 0:
             wprintf(L"Considere a possibilidade de solicitar um professor de outro instituto para lecionar a disciplina\n");
             break;
@@ -125,8 +122,7 @@ void Situacao (int resto[], Aluno* aluno) //essa função descreve os critérios
 
     wprintf(L"-> O critério de alocação de professoress será: ");
 
-    switch (resto[2])
-    {
+    switch (resto[2]) {
         case 0:
             wprintf(L"Os professores deve ser alocados no menor números de dias possíveis\n");
             break;
@@ -145,8 +141,7 @@ void Situacao (int resto[], Aluno* aluno) //essa função descreve os critérios
 
     wprintf(L"-> A ferta das disciplinas se dará: ");
 
-    switch (resto[3])
-    { 
+    switch (resto[3]) { 
         case 0:
             wprintf(L"As disciplinas com pré requisitos tem maior prioridade\n");
             break;
@@ -165,10 +160,8 @@ void Situacao (int resto[], Aluno* aluno) //essa função descreve os critérios
     return;
 }
 
-int value_string(wchar_t letra) //retorna o valor de cada letra do nome
-{ 
-   switch (letra) 
-   {
+int value_string(wchar_t letra) { //retorna o valor de cada letra do nome 
+   switch (letra) {
        case L'q': return 1; case L'w': return 6; case L'e': return 7;
        case L'r': return 6; case L't': return 5; case L'y': return 2;
        case L'u': return 3; case L'i': return 8; case L'o': return 9;
@@ -186,8 +179,7 @@ int value_string(wchar_t letra) //retorna o valor de cada letra do nome
 }
 
 //parte para processar nome
-int name_sum(wchar_t *nome) //soma os valores das letras
-{
+int name_sum(wchar_t *nome) { //soma os valores das letras
    int soma = 0;
 
    for (int i = 0; nome[i] != L'\0'; ++i)
@@ -199,8 +191,7 @@ int name_sum(wchar_t *nome) //soma os valores das letras
 }
 
 //função para separação do nome em partes para fazer a divisão
-void name_process(Aluno aluno, int resto[]) 
-{
+void name_process(Aluno aluno, int resto[]) {
     wchar_t copiaNome[60];
     wchar_t * ultimaParada; //ponteiro que guarda a posição de onde a função wcstok parou
     wchar_t * delimitadores = L" "; //ponteiro que armazena os delimitadores da função wcstok que nesse caso é somente o espaço
@@ -216,15 +207,10 @@ void name_process(Aluno aluno, int resto[])
         //recebe uma string, seus delimitadores e a última posição do ponteiro que é inicialmente NULL
         wchar_t * token = wcstok(copiaNome, delimitadores, &ultimaParada); 
 
-        while (token != NULL) //vai separar e ler cada partição, ou palavra, do nome
-        {
-            if (j > 3) //para caso o nome da pessoa seja muito extenso
-            {
-                break;
-            }
-    
-            if (wcslen(token) > 3) //caso o tamanho da palavra for <= 3 a condição irá ignorar essa palavra e vai pular para a próxima
-            {
+        while (token != NULL) { //vai separar e ler cada partição, ou palavra, do nome
+            if (j > 3) break;//para caso o nome da pessoa seja muito extenso
+     
+            if (wcslen(token) > 3) {//caso o tamanho da palavra for <= 3 a condição irá ignorar essa palavra e vai pular para a próxima
                 soma = name_sum(token);
                 resto[j] = (soma % 3);
                 //wprintf(L"%d° palavra do nome: %ls, tem %ld letras e a soma das suas letras eh: %d\n", j + 1, token, wcslen(token), soma);
@@ -253,3 +239,4 @@ int main() {
     Situacao(resto, &aluno);
     
     return 0;
+}
