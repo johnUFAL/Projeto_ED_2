@@ -7,4 +7,3 @@ Id: COMP363, Nome: Calculo Diferencial e Integral, Nota: 7.8
 Id: COMP364, Nome: Estrutura de Dados, Nota: 10
 Id: COMP365, Nome: Banco de dados, Nota: 8.2 
 Id: COMP366, Nome: Org. E Arq. de Computadores, Nota: 9.6
-Id: COMP367, Nome: Geometria Analitica, Nota: 8.8

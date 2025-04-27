@@ -37,4 +37,3 @@ Periodo: 0, Nome: Calculo 3, Id: COMP404, CH: 72, Requisito: Calculo Diferencial
 Periodo: 0, Nome: Redes Neurais e Aprendizado Profundo, Id: COMP393, CH: 72, Requisito: Nenhum, Horario: 35T34
 Periodo: 0, Nome: Processamento Digital de Imagem, Id: COMP396, CH: 72, Requisito: Computacao Grafica, Horario: 35T12
 Periodo: 0, Nome: Visao Computacional, Id: COMP400, CH: 72, Requisito: Nenhum, Horario: NULL
-Periodo: 0, Nome: FPGA, Id: COMP394, CH: 72, Requisito: Nenhum, Horario: NULL

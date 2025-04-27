@@ -253,4 +253,3 @@ int main() {
     Situacao(resto, &aluno);
     
     return 0;
-}
