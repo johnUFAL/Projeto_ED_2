@@ -18,6 +18,7 @@
 
 typedef struct {
     wchar_t* nome;
+    int id;
     int carga;
     int periodo; //no caso da eletiva 0
     int tipo; //0 para obirgatoria, 1 para eletiva
@@ -147,13 +148,67 @@ int marcarHorario(Sala* S, int dia, int aula) {
     S->disponibilidade[dia][aula] = 1; // marcar como ocupado
     return 1;
 }
+
 //parte para alocação
 
 //parte para prioridades
+int decisaoOfertaDisc(Disciplina* disciplina, Aluno** alunos, int num_alunos, int periodoMax) {
+    //contar quantos alunos podem cursar tal disci
+    int interessados = 0;  //querem fazer a disc
+    int no_prazo; //estao no prazo do curso
+
+    for (int i = 0; i < num_alunos; i++) {
+        int feita = 0; //se ja fex a materia
+        for (int j = 0; alunos[i]->disciplinas_feitas[j] != NULL; j++) {
+            if (wcscmp(alunos[i]->disciplinas_feitas[j], disciplina->id) == 0) {
+                feita = 1;
+                break;
+            }
+        }
+        if (feita) continue;
+
+        //prerequisito
+        int tem_pre;
+        for (int k = 0; disciplina->requisitos[k] != NULL; k++) {
+            int legal = 0; //se tem pres
+            for (int l = 0; alunos[i]->disciplinas_feitas[l] != NULL; l++) {
+                if (wcscmp(alunos[i]->disciplinas_feitas[l], disciplina->requisitos[k]) == 0) {
+                    legal = 1;
+                    break;
+                }
+            }
+
+            if (!legal) {
+                tem_pre = 0;
+                break;
+            }
+        }
+
+        if (tem_pre) {
+            interessados++;
+            if (alunos[i]->periodo <= periodoMax) { //verifica perido
+                no_prazo++;
+            }
+        }
+    }
+
+    //nnoa ofertamento
+    if (interessados == 0) return 0;
+    if(interessados < 10 && no_prazo == 0) return printf("Sem alunos minimos ou aluno no prazo do curso para ofertar\n");
+
+    return 1; // verdadeiro
+  
+}
 
 //parte para estrategias de ofertas e etc
 
 //parte para auxiliares e carregamento
+//carregar dados do curos nos arquivos de textos
+/*Curso* carregarCurso(const char* arq_disc, const char* arq_prof, const char* arq_aluno) {
+    Curso* curso = malloc(sizeof(Curso));
+
+
+} */
 
 //parte para validar
 
