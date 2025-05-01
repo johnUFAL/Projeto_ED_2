@@ -13,6 +13,10 @@
 #include <wchar.h>
 #include <wctype.h>
 
+#define MAXR 4 //n° max de restos
+#define PRAZO_MAX 12 //o maximo de peridos para qualquer aluno é 12
+#define MAX_DISC 3 //de acordo com o nome esse é o maximo de disciplina
+
 //char* armazena um nome (uma string)
 //char** armazena muitas strings (um array de string)
 
@@ -20,6 +24,7 @@ typedef struct {
     wchar_t* nome;
     int id;
     int carga;
+    int peso;
     int periodo; //no caso da eletiva 0
     int tipo; //0 para obirgatoria, 1 para eletiva
     int lab; //caso precise de laboratoria
@@ -65,8 +70,10 @@ typedef struct {
     wchar_t* nome;
     Oferta** ofertas;
     Professor** professores;
+    int qtd_prof;
     Sala** salas;
     Aluno** alunos;
+    int qtd_alunos;
     Disciplina** disciplinas;
 } Curso;
 
@@ -228,20 +235,36 @@ Professor** buscarProfQualif(Professor** professores, int num_prof, Disciplina* 
     return qualificados;
 }
 
+//funcao para ofertar as disciplinas 
+void ofertarDisc(Curso* curso) {
+    //processar obrigatoriad
+    for (int i = 0; curso->disciplinas[i] != NULL; i++) {
+        Disciplina* disc = curso->disciplinas[i];
 
+        //obg ou enfase
+        if (disc->tipo == 0 || disc->peso > 0) {
+            //ofertar ou nnao
+            if (decisaoOfertaDisc(disc, curso->alunos, curso->qtd_alunos, PRAZO_MAX)) {
+                int n_prof; // achar prof qualifcd
+                Professor** qualificados = buscarProfQualif(curso->professores, curso->qtd_prof, disc, &n_prof);
+
+                if (n_prof > 0) {
+                    //alocacao
+                    wprintf(L"Disciplina %ls será ofertada\n", disc->nome);
+                } else {
+                    printf("De acordo com os criterios: Considere a possibilidade de solicitar um professor de outro instituto para lecionar a disciplina\n");
+                }
+
+                free(qualificados);
+            }
+        } else wprintf(L"Disciplina %ls noa pode ser ofertada, pois nao tem os criterios necessarios\n"); 
+    }
+
+    //FALTA ELETIVAS
+}
 
 
 //parte para estrategias de ofertas e etc
-
-//parte para auxiliares e carregamento
-//carregar dados do curos nos arquivos de textos
-/*Curso* carregarCurso(const char* arq_disc, const char* arq_prof, const char* arq_aluno) {
-    Curso* curso = malloc(sizeof(Curso));
-
-
-} */
-
-//parte para validar
 
 void Situacao (int resto[], Aluno* aluno) {//essa função descreve os critérios estabelecidos pela professora{
     wprintf(L"=============================CRITÉRIOS=============================\n");
@@ -325,6 +348,16 @@ void Situacao (int resto[], Aluno* aluno) {//essa função descreve os critério
     return;
 }
 
+
+//parte para auxiliares e carregamento
+//carregar dados do curos nos arquivos de textos
+/*Curso* carregarCurso(const char* arq_disc, const char* arq_prof, const char* arq_aluno) {
+    Curso* curso = malloc(sizeof(Curso));
+
+
+} */
+
+//parte para validar
 int value_string(wchar_t letra) { //retorna o valor de cada letra do nome 
    switch (letra) {
        case L'q': return 1; case L'w': return 6; case L'e': return 7;
@@ -390,9 +423,6 @@ void name_process(Aluno aluno, int resto[]) {
 }
 
 //main
-#define MAXR 4 //n° max de restos
-#define PRAZO_MAX 12 //o maximo de peridos para qualquer aluno é 12
-#define MAX_DISC 3 //de acordo com o nome esse é o maximo de disciplina
 int main() {
     setlocale(LC_ALL, "");
     fwide(stdout, 1);
@@ -403,6 +433,10 @@ int main() {
 
     name_process(aluno, resto);
     Situacao(resto, &aluno);
+
+    Curso* curso = carregarCurso("disciplinas.txt", "professores.txt", "alunos.txt");
+    ofertarDisc(curso);
+    free(curso);
 
     Sala* sala1 = criarSala(L"SALA201", 40, 1); //criação da sala
     if(!sala1){
@@ -418,10 +452,6 @@ int main() {
     }
 
     liberarSala(sala1);
-
-    Curso* curso = carregarCurso("disciplinas.txt", "professores.txt", "alunos.txt");
-    ofertarDisc(curso, resto[1]);
-    free(curso);
     
     return 0;
 }
