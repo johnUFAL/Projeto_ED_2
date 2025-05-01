@@ -1,4 +1,4 @@
-Periodo: 1, Nome: Programacao 1, Id: COMP359, Peso: 1, CH: 72, Requisito: 0, Horario: 6M3456
+Periodo: 1, Nome: Programacao 1, Id: COMP359, Peso: 1, CH: 72, Requisito: 0, Horario: 6M3456, 
 Periodo: 1, Nome: Logica para Computacao, Id: COMP360, Peso: 1, CH: 72, Requisito: 0, Horario: 24M34
 Periodo: 1, Nome: Computacao Sociedade e Etica, Id: COMP361, Peso: 0, CH: 72, Requisito: 0, Horario: 24M56
 Periodo: 1, Nome: Matematica Discreta, Id: COMP362, Peso: 1, CH: 72, Requisito: 0, Horario: 24M12
@@ -37,3 +37,8 @@ Periodo: 0, Nome: Calculo 3, Id: COMP404, CH: 72, Requisito: Calculo Diferencial
 Periodo: 0, Nome: Redes Neurais e Aprendizado Profundo, Id: COMP393, CH: 72, Requisito: Nenhum, Horario: 35T34
 Periodo: 0, Nome: Processamento Digital de Imagem, Id: COMP396, CH: 72, Requisito: Computacao Grafica, Horario: 35T12
 Periodo: 0, Nome: Visao Computacional, Id: COMP400, CH: 72, Requisito: Nenhum, Horario: NULL
+Periodo: 0, Nome: ACE 1, Id: COMP377, CH: 75, Requisito: Nenhum, Horario: 6T12
+Periodo: 0, Nome: ACE 2, Id: COMP383, CH: 75, Requisito: Nenhum, Horario: 6T23
+Periodo: 0, Nome: ACE 3, Id: COMP384, CH: 75, Requisito: Nenhum, Horario: 5T12 
+Periodo: 0, Nome: ACE 4, Id: COMP388, CH: 75, Requisito: Nenhum, Horario: 2N123 
+Periodo: 0, Nome: ACE 5, Id: COMP385, CH: 75, Requisito: Nenhum, Horario: 7M23  

@@ -1,8 +1,8 @@
 //INTEGRANTES
 //Erivaldo José
-//Leandro Marcio
 //Guilherme Alessander
-//João Victor <--- Nome usado como base
+//João Victor 
+//Leandro Marcio <--- Nome usado como base
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -31,7 +31,7 @@ typedef struct {
     wchar_t* formacao;
     int carga;
     int num_disciplinas; //qtd de disciplinas que esta
-    wchar_t** especialização;
+    wchar_t** especializacao;
     int disponibiidade[6][12]; //seis dias e 12 horarios de aula
 } Professor;
 
@@ -157,6 +157,7 @@ void Situacao (int resto[], Aluno* aluno) {//essa função descreve os critério
         default:
             wprintf(L"#\nERRO! Valor fora do intervalo esperado!\n");
     }
+
     return;
 }
 
@@ -226,12 +227,13 @@ void name_process(Aluno aluno, int resto[]) {
 
 //main
 #define MAXR 4 //n° max de restos
-
+#define PRAZO_MAX 12 //o maximo de peridos para qualquer aluno é 12
+#define MAX_DISC 3 //de acordo com o nome esse é o maximo de disciplina
 int main() {
     setlocale(LC_ALL, "");
     fwide(stdout, 1);
     
-    Aluno aluno = {.nome = L"João Victor Duarte do Nascimento"};
+    Aluno aluno = {.nome = L"Leandro Marcio Elias da Silva"};
 
     int resto[MAXR]; 
 
