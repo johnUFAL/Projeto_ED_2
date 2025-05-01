@@ -69,6 +69,59 @@ typedef struct {
     Disciplina** disciplinas;
 } Curso;
 
+Sala* criarSala(const war_t* codigo, int capacidade, int eh_lab){
+//o codigo é constante porque codigo de disciplina não se altera aqui
+    
+    Sala* S = (Sala*)malloc(sizeof(Sala));
+
+    if(!S){
+        wprintf(L"Erro ao alocar sala dinamicamente");
+        return NULL;
+    }
+
+     S->codigo = (wchar_t*)malloc((wcslen(codigo) + 1) * sizeof(wchar_t));
+    if(!S->codigo){
+
+        wprintf(L"Erro ao alocar codigo dinamicamente");
+        free(S);
+        return NULL;
+    }
+
+     wcscpy(S->codigo, codigo);
+
+    S->capacidade = capacidade;
+    S->eh_lab = eh_lab;
+
+    //vamos alocar matriz de disponibilidade agora
+    S->disponibilidade = (int**)malloc(6*sizeof(int*));
+
+    if(!S->disponibilidade){
+        wprintf(L"Erro ao alocar disponibilidade dinamicamente");
+        free(S->codigo);
+        free(S);
+        return NULL;
+    }
+
+    for(int i = 0; i < 6; i++){
+        S->disponibilidade[i] = (int*)calloc(12, sizeof(int)); //inicializa 0, ou seja livre
+
+          if(!S->disponibilidade[i]){
+            wprintf(L"Erro ao alocar memoria");
+
+            //libera a memoria ja alocada antes de retornar
+
+            for(int j = 0; j < i; j++){
+                free(S->disponibilidade[j]);
+            }
+              free(S->disponibilidade);
+              free(S->codigo);
+              free(S);
+              return NULL;
+          }
+    }
+    return S;
+}
+
 //parte para alocação
 
 //parte para prioridades
