@@ -200,6 +200,37 @@ int decisaoOfertaDisc(Disciplina* disciplina, Aluno** alunos, int num_alunos, in
   
 }
 
+//achar prof qualificado
+Professor** buscarProfQualif(Professor** professores, int num_prof, Disciplina* disciplina, int* prof_achados) {
+    Professor** qualificados = malloc(num_prof * sizeof(Professor*));
+    *prof_achados = 0; //contador para professor aptos
+
+    for (int i = 0; i < num_prof; i++) {
+        if (disciplina->periodo <= 4) {
+            qualificados[(*prof_achados)++] = professores[i];
+            continue;
+        }
+        int especializado = 0; //sobre cada especialização
+        for (int j = 0;professores[i]->especializacao[j] != NULL; j++) {
+            //verfiica a especializaçao do professor, ainda esta simples
+            if (wcsstr(professores[i]->especializacao[j], L"Computação") != NULL ||
+                wcsstr(professores[i]->especializacao[j], L"Enegnharia") != NULL) {
+                    especializado = 1;
+                    break;
+            }
+        } 
+
+        if (especializado) {
+            qualificados[(*prof_achados)++] = professores[i];
+        }
+    }
+
+    return qualificados;
+}
+
+
+
+
 //parte para estrategias de ofertas e etc
 
 //parte para auxiliares e carregamento
@@ -387,6 +418,10 @@ int main() {
     }
 
     liberarSala(sala1);
+
+    Curso* curso = carregarCurso("disciplinas.txt", "professores.txt", "alunos.txt");
+    ofertarDisc(curso, resto[1]);
+    free(curso);
     
     return 0;
 }
