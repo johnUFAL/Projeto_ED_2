@@ -122,6 +122,26 @@ Sala* criarSala(const war_t* codigo, int capacidade, int eh_lab){
     return S;
 }
 
+void liberarSala(Sala* S){
+
+    if(!S)return;
+
+    for(int i = 0; i < 6; i++){
+
+        free(S->disponibilidade[i]);
+    }
+    free(S->disponibilidade);
+    free(S->codigo);
+    free(S);
+}
+
+int marcarHorario(Sala* S, int dia, int aula) {
+    if (!S || dia < 0 || dia >= 6 || aula < 0 || aula >= 12) return 0;
+    if (S->disponibilidade[dia][aula] == 1) return 0; // já ocupado
+
+    S->disponibilidade[dia][aula] = 1; // marcar como ocupado
+    return 1;
+}
 //parte para alocação
 
 //parte para prioridades
@@ -292,6 +312,21 @@ int main() {
 
     name_process(aluno, resto);
     Situacao(resto, &aluno);
+
+    Sala* sala1 = criarSala(L"SALA201", 40, 1); //criação da sala
+    if(!Sala1){
+        wprintf(L"Erro ao criar sala");
+        return 1;
+    }
+    //exemplo de tentando marcar horario segunda feira (dia 4), aula 2...
+    if(marcarHorario(Sala1, 4, 5)){
+        wprintf(L"Horario marcado com sucesso\n");
+    }
+    else{
+        wprintf(L"Erro ao marcar horario\n");
+    }
+
+    liberarSala(sala1);
     
     return 0;
 }
