@@ -19,7 +19,7 @@
 typedef struct {
     wchar_t* nome;
     int carga;
-    int perido; //no caso da eletiva 0
+    int periodo; //no caso da eletiva 0
     int tipo; //0 para obirgatoria, 1 para eletiva
     int lab; //caso precise de laboratoria
     wchar_t* horario;
@@ -39,7 +39,7 @@ typedef struct {
     wchar_t* codigo;
     int capacidade;
     int eh_lab; //0 se nao, 1 se sim
-    int disponibiidade[6][12];
+    int** disponibilidade;
 } Sala;
 
 typedef struct {
@@ -69,7 +69,12 @@ typedef struct {
     Disciplina** disciplinas;
 } Curso;
 
-Sala* criarSala(const war_t* codigo, int capacidade, int eh_lab){
+//parte para alocação
+
+//parte para prioridades
+
+//parte para estrate
+Sala* criarSala(const wchar_t* codigo, int capacidade, int eh_lab){
 //o codigo é constante porque codigo de disciplina não se altera aqui
     
     Sala* S = (Sala*)malloc(sizeof(Sala));
@@ -314,12 +319,12 @@ int main() {
     Situacao(resto, &aluno);
 
     Sala* sala1 = criarSala(L"SALA201", 40, 1); //criação da sala
-    if(!Sala1){
+    if(!sala1){
         wprintf(L"Erro ao criar sala");
         return 1;
     }
     //exemplo de tentando marcar horario segunda feira (dia 4), aula 2...
-    if(marcarHorario(Sala1, 4, 5)){
+    if(marcarHorario(sala1, 4, 5)){
         wprintf(L"Horario marcado com sucesso\n");
     }
     else{
