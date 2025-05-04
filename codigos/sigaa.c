@@ -82,70 +82,122 @@ typedef struct {
 //parte para prioridades
 
 //parte para estrate
-Sala* criarSala(const wchar_t* codigo, int capacidade, int eh_lab){
-//o codigo é constante porque codigo de disciplina não se altera aqui
-    
-    Sala* S = (Sala*)malloc(sizeof(Sala));
 
-    if(!S){
-        wprintf(L"Erro ao alocar sala dinamicamente");
+//Função para inicializar a disponibilidade da sala
+int **inicializardisponibilidade() {
+    int **disponibilidade = (int**)malloc(6 * sizeof(int*));
+    if(disponibilidade == NULL){
+
         return NULL;
+
     }
+    for (int i = 0; i < 6; i++) {
+        disponibilidade[i] = (int*)calloc(12, sizeof(int));
+        if(disponibilidade[i] == NULL){
+            free(disponibilidade);
+            return NULL;
 
-     S->codigo = (wchar_t*)malloc((wcslen(codigo) + 1) * sizeof(wchar_t));
-    if(!S->codigo){
-
-        wprintf(L"Erro ao alocar codigo dinamicamente");
-        free(S);
-        return NULL;
+        }
     }
-
-     wcscpy(S->codigo, codigo);
-
-    S->capacidade = capacidade;
-    S->eh_lab = eh_lab;
-
-    //vamos alocar matriz de disponibilidade agora
-    S->disponibilidade = (int**)malloc(6*sizeof(int*));
-
-    if(!S->disponibilidade){
-        wprintf(L"Erro ao alocar disponibilidade dinamicamente");
-        free(S->codigo);
-        free(S);
-        return NULL;
-    }
-
-    for(int i = 0; i < 6; i++){
-        S->disponibilidade[i] = (int*)calloc(12, sizeof(int)); //inicializa 0, ou seja livre
-
-          if(!S->disponibilidade[i]){
-            wprintf(L"Erro ao alocar memoria");
-
-            //libera a memoria ja alocada antes de retornar
-
-            for(int j = 0; j < i; j++){
-                free(S->disponibilidade[j]);
-            }
-              free(S->disponibilidade);
-              free(S->codigo);
-              free(S);
-              return NULL;
-          }
-    }
-    return S;
+    return disponibilidade;
 }
 
-void liberarSala(Sala* S){
+Sala** inicializar_salas_fixas() {
+    Sala** salas = (Sala**)malloc(21 * sizeof(Sala*));
 
-    if(!S)return;
+    if(!salas){
 
-    for(int i = 0; i < 6; i++){
+        wprintf(L"Erro ao alocar memória para as salas.\n");
+        return NULL;
 
-        free(S->disponibilidade[i]);
     }
-    free(S->disponibilidade);
-    free(S->codigo);
-    free(S);
+
+    wchar_t* nomes[21] = {
+        L"Sala de Aula 01", L"Sala de Aula 02", L"Sala de Aula 03",
+        L"Mini-sala 01", L"Mini-auditório", L"Sala de Reuniões",
+        L"Laboratório de Robótica", L"Laboratório de Graduação 01", L"Laboratório de Graduação 02",
+        L"Laboratório de Graduação 03", L"Lab. de Circ. Elétricos e Eletrônicos",
+        L"Laboratório da Pós 01", L"Laboratório da Pós 02",
+        L"Sala de Aula da Pós 01", L"Sala de Aula da Pós 02",
+        L"Sala de Aula 207", L"Sala de Aula 206", L"Sala de Aula 205",
+        L"Sala de Aula 204", L"Auditório", L"Sala de Reuniões"
+    };
+
+    int capacidades[21] = {
+        40, 40, 40, 40, 60, 30, 30, 30, 30, 20,
+        20, 20, 20, 40, 40, 40, 40, 40, 40, 60, 20
+    };
+
+    int eh_lab[21] = {
+        0, 0, 0, 0, 0, 0, 1, 1, 1, 1,
+        1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0
+    };
+
+    for (int i = 0; i < 21; i++) {
+        salas[i] = (Sala*)malloc(sizeof(Sala));
+        if(salas[i] == NULL){
+            return 1;
+        }
+        salas[i]->codigo = nomes[i];
+        salas[i]->capacidade = capacidades[i];
+        salas[i]->eh_lab = eh_lab[i];
+        salas[i]->disponibilidade = inicializardisponibilidade();
+    }
+
+    return salas;
+}
+
+//Função para liberar memoria das salas
+
+void liberar_salas(Sala** salas) {
+    if (!salas) return;
+    for (int i = 0; i < 21; i++) {
+        //libera cada linha da matriz de disponibilidade
+        for (int j = 0; j < 6; j++) {
+            free(salas[i]->disponibilidade[j]);
+        }
+        //libera matriz de disponibilidade
+        free(salas[i]->disponibilidade);
+        //libera a sala
+        free(salas[i]);
+        salas[i] = NULL; //limpa o ponteiro da sala
+    }
+    //libera o ponteiro para o array de salas 
+    free(salas);
+    salas = NULL; //limpa o ponteiro principal (tipo, isso é importante para se a gente for acessar após liberar)
+}
+
+
+//FUNÇÃO PARA LISTAR HORARIOS OCUPADOS
+
+void listar_horarios_ocupados(Sala *S) {
+    if (!S) return;
+    wprintf(L"\nHorários ocupados da sala %ls:\n", S->codigo);
+    for (int dia = 0; dia < 6; dia++) {
+        int ocupado = 0;
+        for (int aula = 0; aula < 12; aula++) {
+            if (S->disponibilidade[dia][aula] == 1) {
+                if (!ocupado) {
+                    wprintf(L" Dia %d: ", dia);
+                    ocupado = 1;
+                }
+                wprintf(L"%d ", aula);
+            }
+        }
+        if (ocupado) wprintf(L"\n");
+    }
+}
+void listar_salas_disponiveis(Sala** salas, int dia, int aula) {
+    if (!salas || dia < 0 || dia >= 6 || aula < 0 || aula >= 12) return;
+    wprintf(L"\nSalas disponíveis no dia %d, aula %d:\n", dia, aula);
+    for (int i = 0; i < 21; i++) {
+        if (salas[i]->disponibilidade[dia][aula] == 0) {
+            wprintf(L"%ls (Capacidade: %d, %ls)\n", 
+                salas[i]->codigo, 
+                salas[i]->capacidade, 
+                salas[i]->eh_lab ? L"Laboratório" : L"Comum");
+        }
+    }
 }
 
 int marcarHorario(Sala* S, int dia, int aula) {
@@ -155,6 +207,10 @@ int marcarHorario(Sala* S, int dia, int aula) {
     S->disponibilidade[dia][aula] = 1; // marcar como ocupado
     return 1;
 }
+
+
+
+
 
 //parte para alocação
 
@@ -438,20 +494,117 @@ int main() {
     ofertarDisc(curso);
     free(curso);
 
-    Sala* sala1 = criarSala(L"SALA201", 40, 1); //criação da sala
-    if(!sala1){
-        wprintf(L"Erro ao criar sala");
+    Sala** salas = inicializar_salas_fixas();
+
+    if(!salas){
+        wprintf(L"Erro ao inicializar salas fixas.\n");
         return 1;
-    }
-    //exemplo de tentando marcar horario segunda feira (dia 4), aula 2...
-    if(marcarHorario(sala1, 4, 5)){
-        wprintf(L"Horario marcado com sucesso\n");
-    }
-    else{
-        wprintf(L"Erro ao marcar horario\n");
+
     }
 
-    liberarSala(sala1);
+
+    int opcao;
+    do {
+        wprintf(L"\n=== MENU SALAS ===\n");
+        wprintf(L"1. Listar horários ocupados de uma sala\n");
+        wprintf(L"2. Listar salas disponíveis em um horário\n");
+        wprintf(L"3. Marcar um horário como ocupado (reserva de sala)\n");
+        wprintf(L"4. Alocar disciplina automaticamente\n");
+        wprintf(L"0. Sair\n");
+        wprintf(L"Escolha uma opção: ");
+        wscanf(L"%d", &opcao);
+        getchar();
+
+        switch (opcao) {
+            case 1: {
+                int num;
+                wprintf(L"Digite o número da sala (0 a 20): ");
+                wscanf(L"%d", &num);
+                getchar();
+                if (num < 0 || num >= 21) {
+                    wprintf(L"Número de sala inválido.\n");
+                    break;
+                }
+                listarHorarios(salas[num]);
+                break;
+            }
+            case 2: {
+                int dia, aula;
+                wprintf(L"Digite o dia da semana (0=Seg, ..., 5=Sáb): ");
+                wscanf(L"%d", &dia);
+                wprintf(L"Digite o número da aula (0 a 11): ");
+                wscanf(L"%d", &aula);
+                getchar();
+                listarSalasDisponiveis(salas, dia, aula);
+                break;
+            }
+            case 3: {
+                int num, dia, aula;
+                wprintf(L"Digite o número da sala (0 a 20): ");
+                wscanf(L"%d", &num);
+                wprintf(L"Digite o dia da semana (0=Seg, ..., 5=Sáb): ");
+                wscanf(L"%d", &dia);
+                wprintf(L"Digite o número da aula (0 a 11): ");
+                wscanf(L"%d", &aula);
+                getchar();
+                if (marcarHorario(salas[num], dia, aula)) {
+                    wprintf(L"Horário marcado com sucesso.\n");
+                } else {
+                    wprintf(L"Horário já ocupado ou inválido.\n");
+                }
+                break;
+            }
+            case 4: {
+                Disciplina d;
+                wprintf(L"Nome da disciplina: ");
+                fgetws(d.nome, sizeof(d.nome) / sizeof(wchar_t), stdin);
+                d.nome[wcscspn(d.nome, L"\n")] = L'\0';
+
+                wprintf(L"Capacidade mínima necessária: ");
+                wscanf(L"%d", &d.capacidade_minima);
+                wprintf(L"Disciplina exige laboratório? (1 = Sim, 0 = Não): ");
+                wscanf(L"%d", &d.lab);
+                wprintf(L"Digite o dia da semana (0=Seg, ..., 5=Sáb): ");
+                wscanf(L"%d", &d.dia);
+                wprintf(L"Digite o número da aula (0 a 11): ");
+                wscanf(L"%d", &d.aula);
+                getchar();
+
+                int alocada = 0;
+                for (int i = 0; i < 21; i++) {
+                    Sala *s = salas[i];
+                    if (s->capacidade >= d.capacidade_minima &&
+                        s->lab == d.lab &&
+                        s->disponibilidade[d.dia][d.aula] == 0) {
+                        s->disponibilidade[d.dia][d.aula] = 1;
+                        wprintf(L"Disciplina \"%ls\" alocada na sala %d com sucesso.\n", d.nome, i);
+                        alocada = 1;
+                        break;
+                    }
+                }
+
+                if (!alocada) {
+                    wprintf(L"Nenhuma sala disponível atende aos critérios.\n");
+                }
+                break;
+            }
+            case 0:
+                wprintf(L"Encerrando o programa...\n");
+                break;
+            default:
+                wprintf(L"Opção inválida.\n");
+        }
+
+    } while (opcao != 0);
+
+  for (int i = 0; i < 21; i++) {
+        liberarSala(salas[i]);
+    }
+    free(salas);
+    free(curso);
+
+
+   
     
     return 0;
 }
