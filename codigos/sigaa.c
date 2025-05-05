@@ -16,7 +16,7 @@
 #define MAXR 4 //n° max de restos
 #define PRAZO_MAX 12 //o maximo de peridos para qualquer aluno é 12
 #define MAX_DISC 3 //de acordo com o nome esse é o maximo de disciplina
-
+#define MAX_REQUISITOS 10 //o máximo de requisitos por disciplina
 //char* armazena um nome (uma string)
 //char** armazena muitas strings (um array de string)
 
@@ -208,7 +208,117 @@ int marcarHorario(Sala* S, int dia, int aula) {
     return 1;
 }
 
+//função para duplicar string, ajuda a não apontar p memória compartilhada
+wchar_t* wcsdup_safe(const wchar_t* src) {
+    if (!src) return NULL;
+    wchar_t* copia = malloc((wcslen(src) + 1) * sizeof(wchar_t));
+    if (copia) wcscpy(copia, src);
+    return copia;
+}
 
+//função para identificar a maneira como os requistos são separados para poder incluir
+wchar_t** dividir_requisitos(const wchar_t* linha) {
+    wchar_t** lista = malloc(MAX_REQUISITOS * sizeof(wchar_t*));
+    int count = 0;
+    wchar_t* copia = wcsdup_safe(linha);
+    wchar_t* token;
+    wchar_t* context;
+
+    token = wcstok(copia, L"_", &context);
+    while (token && count < MAX_REQUISITOS) {
+        lista[count++] = wcsdup_safe(token);
+        token = wcstok(NULL, L"_", &context);
+    }
+    lista[count] = NULL;
+    free(copia);
+    return lista;
+}
+
+//Aqui ele verifica no arquivo de texto cada valor como periodo, CH e separa através das virgulas no arquivo
+void extrair_valor(const wchar_t* linha, const wchar_t* chave, wchar_t* destino) {
+    const wchar_t* inicio = wcsstr(linha, chave);
+    if (!inicio) {
+        destino[0] = L'\0';
+        return;
+    }
+    inicio += wcslen(chave);
+    while (*inicio == L' ') inicio++; // pula espaços
+
+    const wchar_t* fim = wcschr(inicio, L',');
+    if (!fim) fim = linha + wcslen(linha); // até o final
+
+    wcsncpy(destino, inicio, fim - inicio);
+    destino[fim - inicio] = L'\0';
+}
+
+// Leitura principal do arquivo de texto para poder organizar na struct
+Disciplina** ler_disciplinas(const wchar_t* nome_arquivo, int* total) {
+    setlocale(LC_ALL, "");
+    FILE* arquivo = _wfopen(nome_arquivo, L"r, ccs=UTF-8");
+    if (!arquivo) {
+        wprintf(L"Erro ao abrir o arquivo.\n");
+        return NULL;
+    }
+
+    wchar_t linha[512];
+    Disciplina** lista = NULL;
+    *total = 0;
+
+    while (fgetws(linha, sizeof(linha) / sizeof(wchar_t), arquivo)) {
+        linha[wcscspn(linha, L"\n")] = L'\0';
+
+        wchar_t buffer[100];
+
+        Disciplina* nova = malloc(sizeof(Disciplina));
+
+        extrair_valor(linha, L"Nome:", buffer);
+        nova->nome = wcsdup_safe(buffer);
+
+        extrair_valor(linha, L"CH:", buffer);
+        nova->carga = wcstol(buffer, NULL, 10);
+
+        extrair_valor(linha, L"Periodo:", buffer);
+        nova->periodo = wcstol(buffer, NULL, 10);
+
+        extrair_valor(linha, L"Peso:", buffer);
+        nova->tipo = wcstol(buffer, NULL, 10);
+
+        extrair_valor(linha, L"Lab:", buffer);
+        nova->lab = wcstol(buffer, NULL, 10);
+
+        extrair_valor(linha, L"Horario:", buffer);
+        nova->horario = wcsdup_safe(buffer);
+
+        extrair_valor(linha, L"Requisito:", buffer);
+        nova->requisitos = dividir_requisitos(buffer);
+
+        lista = realloc(lista, (*total + 1) * sizeof(Disciplina*));
+        lista[*total] = nova;
+        (*total)++;
+    }
+
+    fclose(arquivo);
+    return lista;
+}
+
+//Função p mostrar como ficou organizado as disciplinas, mas pode apagar se n for necessário para apresentação
+void imprimir_disciplinas(Disciplina** disciplinas, int total) {
+    for (int i = 0; i < total; i++) {
+        Disciplina* d = disciplinas[i];
+        wprintf(L"\nNome: %ls\n", d->nome);
+        wprintf(L"Periodo: %d | Carga: %d | Peso: %d | Lab: %d\n", d->periodo, d->carga, d->tipo, d->lab);
+        wprintf(L"Horário: %ls\n", d->horario);
+        wprintf(L"Requisitos: ");
+        if (d->requisitos) {
+            for (int j = 0; d->requisitos[j]; j++) {
+                wprintf(L"%ls ", d->requisitos[j]);
+            }
+        } else {
+            wprintf(L"Nenhum");
+        }
+        wprintf(L"\n-----------------------------\n");
+    }
+}
 
 
 
