@@ -163,7 +163,7 @@ int marcarHorario(Sala* S, int dia, int aula) {
 int decisaoOfertaDisc(Disciplina* disciplina, Aluno** alunos, int num_alunos, int periodoMax) {
     //contar quantos alunos podem cursar tal disci
     int interessados = 0;  //querem fazer a disc
-    int no_prazo; //estao no prazo do curso
+    int no_prazo = 0; //estao no prazo do curso
 
     for (int i = 0; i < num_alunos; i++) {
         int feita = 0; //se ja fex a materia
@@ -352,11 +352,195 @@ void Situacao (int resto[], Aluno* aluno) {//essa função descreve os critério
 
 //parte para auxiliares e carregamento
 //carregar dados do curos nos arquivos de textos
-/*Curso* carregarCurso(const char* arq_disc, const char* arq_prof, const char* arq_aluno) {
-    Curso* curso = malloc(sizeof(Curso));
+Curso* carregarCurso(const char* arq_disc, const char* arq_prof, const char* arq_aluno) {
+    FILE* file;
+    wchar_t linhas[200];
+    Curso* curso = (Curso*)malloc(sizeof(Curso));
+    if (!curso) return NULL;
+
+    //entradas
+    curso->alunos = NULL;
+    curso->disciplinas = NULL;
+    curso->nome = NULL;
+    curso->salas = NULL;
+    curso->ofertas = NULL;
+    curso->qtd_alunos = 0;
+    curso->qtd_prof = 0;
+
+    //carregando disc
+    file = fopen(arq_disc, "r");
+    if (file) {
+        int cont = 0;
+        while (fgetws(linhas, 200, file)) cont++;
+        rewind(file);
+
+        curso->disciplinas = (Disciplina**)malloc((cont+1) * sizeof(Disciplina*));
+        int i = 0;
+        while (fgetws(linhas, 200, file)) {
+            Disciplina* disc = (Disciplina*)malloc(sizeof(Disciplina));
+            wchar_t* tk;
+            wchar_t* contexto = NULL;
+
+            //dados da disc
+            tk = wcstok(linhas, L",", &contexto);
+            while (tk) {
+                if (wcsstr(tk, L"Periodo:")) {
+                    disc->periodo = _wtoi(wcstok(NULL, L" ", &contexto));
+                } else if (wcsstr(tk, L"Nome:")) {
+                    disc->nome = _wcsdup(wcstok(NULL, L",", &contexto));
+                } else if (wcsstr(tk, L"Id:")) {
+                    disc->id = _wtoi(wcstok(NULL, L" ", &contexto));
+                } else if (wcsstr(tk, L"Peso:")) {
+                    disc->peso = _wtoi(wcstok(NULL, L" ", &contexto));
+                } else if (wcsstr(tk, L"CH:")) {
+                    disc->carga = _wtoi(wcstok(NULL, L" ", &contexto));
+                } else if (wcsstr(tk, L"Requisito:")) {
+                    wchar_t* req = wcstok(NULL, L",", &contexto);
+                    if (wcscmp(req, L"0") == 0 || wcscmp(req, L"Nenhum") == 0) {
+                        disc->requisitos = (wchar_t**)malloc(MAX_REQUISITOS * sizeof(wchar_t*));
+                    } else {
+                        //multiplos requisitos
+                        disc->requisitos = (wchar_t**)malloc(MAX_REQUISITOS * sizeof(wchar_t*));
+                        wchar_t* req_tk;
+                        wchar_t* req_contexto = NULL;
+                        int j = 0;
+                        req_tk = wcstok(req, L"_", &contexto);
+                        while (req_tk && j < MAX_REQUISITOS) {
+                            disc->requisitos[j++] = _wcsdup(req_tk);
+                            req_tk = wcstok(NULL, L"_", &contexto);
+                        }
+                        disc->requisitos[j] = NULL;
+                    }
+                }
+                else if (wcsstr(tk, L" Horario:")) {
+                    disc->horario = _wcsdup(wcstok(NULL, L",", &contexto));
+                }
+                tk = wcstok(NULL, L",", &contexto);
+            }
+
+            //definer obrigatorio=0 ou eletiva=1
+            disc->tipo = (disc->periodo == 0) ? 1 : 0;
+            disc->lab = 0; //TEM QUE VER ISSO AQUI
+
+            curso->disciplinas[i++] = disc;
+        }
+        curso->disciplinas[i] = NULL;
+        fclose(file);
+    }
+
+    //carregar prof
+    file = fopen(arq_prof, "r");
+    if (file) {
+        int cont = 0;
+        while (fgetws(linhas, 200, file)) cont++;
+        rewind(file);
+
+        curso->professores = (Professor**)malloc((cont+1) * sizeof(Professor*));
+
+        int i = 0;
+        while (fgetws(linhas, 200, file)) {
+            Professor* prof = (Professor*)malloc(sizeof(Professor));
+            wchar_t* tk;
+            wchar_t* contexto = NULL;
+
+            tk = wcstok(linhas, L",", &contexto);
+            while (tk) {
+                if (wcsstr(tk, L"Nome:")) {
+                    prof->nome = _wcsdup(wcstok(NULL, L",", &contexto));
+                }
+                else if (wcsstr(tk, L" Formação:")) {
+                    prof->formacao = _wcsdup(wcstok(NULL, L",", &contexto));
+                    
+                    //especializacoes
+                    wchar_t* esp_tk;
+                    wchar_t* esp_contexto = NULL;
+                    prof->especializacao = (wchar_t**)malloc(10 * sizeof(wchar_t*));
+                    int j = 0;
+                    esp_tk = wcstok(prof->formacao, L",", &esp_contexto);
+                    while (esp_tk && j < 10) {
+                        prof->especializacao[j++] = _wcsdup(esp_tk);
+                        esp_tk = wcstok(NULL, L",", &esp_contexto);
+                    }
+                    prof->especializacao[j] = NULL;
+                }
+                tk = wcstok(NULL, L",", &contexto);
+            }
+
+            //disponibilidade de horsrio
+            for (int d = 0; d < 6; d++) {
+                for (int h = 0; h < 12; h++) {
+                    prof->disponibiidade[d][h] = 0;
+                }
+            }
+
+            curso->professores[i++] = prof;
+            curso->qtd_prof++;
+        }
+        curso->professores[i] = NULL;
+        fclose(file);
+    }
+
+    //carregar aluno
+    file = fopen(arq_aluno, "r");
+    if (file) {
+        int cont = 0;
+        while (fgetws(linhas, 10000, file)) {
+            if (wcsstr(linhas, L"Nome:")) cont++;
+        }
+        rewind(file);
+
+        curso->alunos = (Aluno**)malloc((cont+1) * sizeof(Aluno*));
+        
+        Aluno* aluno_atual = NULL;
+        int i = 0;
+        while (fgetws(linhas, 10000, file)) {
+            if (wcsstr(linhas, L"Nome:")) {
+                if (aluno_atual) {
+                    curso->alunos[i++] = aluno_atual;
+                    curso->qtd_alunos++;
+                }
+                
+                aluno_atual = (Aluno*)malloc(sizeof(Aluno));
+                wchar_t* tk = wcstok(linhas, L",", NULL);
+                aluno_atual->nome = _wcsdup(wcstok(NULL, L",", NULL));
+                
+                //prox perido
+                fgetws(linhas, 10000, file);
+                tk = wcstok(linhas, L":", NULL);
+                aluno_atual->periodo = _wtoi(wcstok(NULL, L",", NULL));
+                
+                //init disc vetor
+                aluno_atual->disciplinas_feitas = (wchar_t**)malloc(50 * sizeof(wchar_t*));
+                aluno_atual->disciplinas_falta = (wchar_t**)malloc(50 * sizeof(wchar_t*));
+                int feitas_qtd = 0, falta_qtd = 0;
+                
+                //disc feitas
+                while (fgetws(linhas, 10000, file) && wcsstr(linhas, L"Id:")) {
+                    tk = wcstok(linhas, L":", NULL);
+                    aluno_atual->disciplinas_feitas[feitas_qtd++] = _wcsdup(wcstok(NULL, L",", NULL));
+                    //pula o restp
+                }
+                aluno_atual->disciplinas_feitas[feitas_qtd] = NULL;
+                aluno_atual->disciplinas_falta[falta_qtd] = NULL;
+            }
+        }
+
+        //ultimo aluno
+        if (aluno_atual) {
+            curso->alunos[i++] = aluno_atual;
+            curso->alunos++;
+        }
+        curso->alunos[i] = NULL;
+        fclose(file);
+    }
+    return curso;
+}
+
+//void liberarCruso()
 
 
-} */
+
+
 
 //parte para validar
 int value_string(wchar_t letra) { //retorna o valor de cada letra do nome 
@@ -437,7 +621,7 @@ int main() {
 
     Curso* curso = carregarCurso("disciplinas.txt", "professores.txt", "alunos.txt");
     ofertarDisc(curso);
-    free(curso);
+    free(curso); //errado, aida falta implemntar certo
 
     Sala* sala1 = criarSala(L"SALA201", 40, 1); //criação da sala
     if(!sala1){

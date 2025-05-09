@@ -1,0 +1,7 @@
+1. fgetws: ele vai ler uma linha de um documento de um (wchar_t*)
+2. rewind: volta o ponteiro de um documento para o começo
+3. wcstok: divide uma string wide em partes (tk) com base em algum parâmetro
+4. _wtoi: converte uma string wide em inteiro
+5. _wcsdup: duplica uma string wide (alocação de memória)
+6. wcsstr: vai procurar a primera vez que um parâmetro acontece em uma string wide
+7. wcscmp: compara duas string wide
