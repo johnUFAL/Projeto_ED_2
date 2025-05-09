@@ -699,15 +699,10 @@ int main() {
         }
     }
 
-    if (!sucesso)
+    if (!sucesso){
         wprintf(L"[Aviso] Nenhuma sala atende aos critérios.\n");
     break;
                 }
-
-                if (!alocada) {
-                    wprintf(L"Nenhuma sala disponível atende aos critérios.\n");
-                }
-                break;
             }
             case 0:
                 wprintf(L"Encerrando o programa...\n");
