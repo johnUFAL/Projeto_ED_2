@@ -547,9 +547,9 @@ void liberarCurso(Curso* curso) {
 
             if (curso->disciplinas[i]->requisitos) {
                 for (int j = 0; curso->disciplinas[i]->requisitos[j] != NULL; j++) {
-                    free(curso->disciplinas[i]->requisitos);
+                    free(curso->disciplinas[i]->requisitos[j]);
                 }
-                free(curso->disciplinas[i]->requisitos);  
+                free(curso->disciplinas[i]->requisitos);
             } 
             free(curso->disciplinas[i]);
         }
