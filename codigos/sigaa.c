@@ -214,25 +214,21 @@ Professor** buscarProfQualif(Professor** professores, int num_prof, Disciplina* 
     *prof_achados = 0; //contador para professor aptos
 
     for (int i = 0; i < num_prof; i++) {
+        //as basicas, perido 4 pra baixo (ED ne basico nao oxi)
         if (disciplina->periodo <= 4) {
             qualificados[(*prof_achados)++] = professores[i];
             continue;
         }
         int especializado = 0; //sobre cada especialização
-        for (int j = 0;professores[i]->especializacao[j] != NULL; j++) {
+        for (int j = 0; professores[i]->especializacao[j] != NULL; j++) {
             //verfiica a especializaçao do professor, ainda esta simples
             if (wcsstr(professores[i]->especializacao[j], L"Computação") != NULL ||
-                wcsstr(professores[i]->especializacao[j], L"Enegnharia") != NULL) {
-                    especializado = 1;
-                    break;
+                wcsstr(professores[i]->especializacao[j], L"Engenharia") != NULL) {
+                qualificados[(*prof_achados)++] = professores[i];
+                break;
+                }
             }
         } 
-
-        if (especializado) {
-            qualificados[(*prof_achados)++] = professores[i];
-        }
-    }
-
     return qualificados;
 }
 
@@ -263,7 +259,6 @@ void ofertarDisc(Curso* curso) {
 
     //FALTA ELETIVAS
 }
-
 
 //parte para estrategias de ofertas e etc
 
