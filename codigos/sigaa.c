@@ -13,11 +13,6 @@
 #include <wchar.h>
 #include <wctype.h>
 
-#define MAXR 4 //n° max de restos
-#define PRAZO_MAX 12 //o maximo de peridos para qualquer aluno é 12
-#define MAX_DISC 3 //de acordo com o nome esse é o maximo de disciplina
-#define MAX_REQUISITOS 10 //o máximo de requisitos por disciplin
-
 //coisa do LINUX, aparentemente precisa disso
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE  // Para wcsdup no Linux
@@ -28,6 +23,11 @@
 #define wcsdup _wcsdup
 #define wcstol _wtol
 #endif
+
+#define MAXR 4 //n° max de restos
+#define PRAZO_MAX 12 //o maximo de peridos para qualquer aluno é 12
+#define MAX_DISC 3 //de acordo com o nome esse é o maximo de disciplina
+#define MAX_REQUISITOS 10 //o máximo de requisitos por disciplin
 
 //char* armazena um nome (uma string)
 //char** armazena muitas strings (um array de string)
@@ -187,7 +187,7 @@ int decisaoOfertaDisc(Disciplina* disciplina, Aluno** alunos, int num_alunos, in
         if (feita) continue;
 
         //prerequisito
-        int tem_pre;
+        int tem_pre = 1;
         for (int k = 0; disciplina->requisitos[k] != NULL; k++) {
             int legal = 0; //se tem pres
             for (int l = 0; alunos[i]->disciplinas_feitas[l] != NULL; l++) {
@@ -230,7 +230,6 @@ Professor** buscarProfQualif(Professor** professores, int num_prof, Disciplina* 
             qualificados[(*prof_achados)++] = professores[i];
             continue;
         }
-        int especializado = 0; //sobre cada especialização
         for (int j = 0; professores[i]->especializacao[j] != NULL; j++) {
             //verfiica a especializaçao do professor, ainda esta simples
             if (wcsstr(professores[i]->especializacao[j], L"Computação") != NULL ||
@@ -246,16 +245,37 @@ Professor** buscarProfQualif(Professor** professores, int num_prof, Disciplina* 
 //funcao para ofertar as disciplinas 
 void ofertarDisc(Curso* curso) {
     //processar obrigatoriad
+    if (!curso || !curso->disciplinas || !curso->alunos || !curso->professores) {
+        wprintf(L"Dados do curso incompletos!\n");
+        return;
+    }
+
+    wprintf(L"[DEBUG] Iniciando ofertarDisc()\n");
+
+
     for (int i = 0; curso->disciplinas[i] != NULL; i++) {
+        
+        wprintf(L"[DEBUG] Verificando disciplina %d\n", i);
         Disciplina* disc = curso->disciplinas[i];
+        wprintf(L"[DEBUG] Nome da disciplina: %ls\n", disc->nome);
+
 
         //obg ou enfase
         if (disc->tipo == 0 || disc->peso > 0) {
+            wprintf(L"[DEBUG] Chamando decisaoOfertaDisc()\n");
+
             int pode_ofertar = decisaoOfertaDisc(disc, curso->alunos, curso->qtd_alunos, PRAZO_MAX);
             int prof_encontrado = 0;
             
+            wprintf(L"[DEBUG] decisaoOfertaDisc retornou: %d\n", pode_ofertar);
+
+            
             if (pode_ofertar) {
+                wprintf(L"[DEBUG] Chamando buscarProfQualif()\n");
+
                 Professor** quali = buscarProfQualif(curso->professores, curso->qtd_prof, disc, &prof_encontrado);
+                
+                wprintf(L"[DEBUG] buscarProfQualif retornou %d professor(es)\n", prof_encontrado);
 
                 if (prof_encontrado > 0) {
                     //o primeiro prof qualificadfo eh o que eh
@@ -269,13 +289,14 @@ void ofertarDisc(Curso* curso) {
                 }
                 free(quali);
             } else {
+                wprintf(L"[DEBUG] Disciplina não será ofertada\n");
                 wprintf(L"\n----- Disciplina Nao Ofertada -----\n");
                 wprintf(L"%ls nao atendeu as solicitacoes minimas\n", disc->nome);
                 wprintf(L"------------------------------------------------\n");
             }
         }
-    }
-        //FALTA ELETIVAS
+    }    
+     //FALTA ELETIVAS
 }
 
 //parte para estrategias de ofertas e etc
@@ -340,7 +361,7 @@ void Situacao (int resto[], Aluno* aluno) {//essa função descreve os critério
             wprintf(L"#\nERRO! Valor fora do intervalo esperado!\n");
     }
 
-    wprintf(L"-> A ferta das disciplinas se dará: ");
+    wprintf(L"-> A oferta das disciplinas se dará: ");
 
     switch (resto[3]) { 
         case 0:
@@ -398,24 +419,26 @@ Curso* carregarCurso(const char* arq_disc, const char* arq_prof, const char* arq
             tk = wcstok(linhas, L",", &contexto);
             while (tk) {
                 if (wcsstr(tk, L"Periodo:")) {
-                    disc->periodo = wcstol(wcstok(NULL, L" ", &contexto));
+                    disc->periodo = wcstol(wcstok(NULL, L" ", &contexto), NULL, 10);
                 } else if (wcsstr(tk, L"Nome:")) {
                     disc->nome = wcsdup(wcstok(NULL, L",", &contexto));
                 } else if (wcsstr(tk, L"Id:")) {
-                    disc->id = wcstol(wcstok(NULL, L" ", &contexto));
+                    wchar_t id_str[20];
+                    swprintf(id_str, 20, L"%ld", wcstol(wcstok(NULL, L" ", &contexto), NULL, 10));
+                    disc->id = wcsdup(id_str);
                 } else if (wcsstr(tk, L"Peso:")) {
-                    disc->peso = wcstol(wcstok(NULL, L" ", &contexto));
+                    disc->peso = wcstol(wcstok(NULL, L" ", &contexto), NULL, 10);
                 } else if (wcsstr(tk, L"CH:")) {
-                    disc->carga = wcstol(wcstok(NULL, L" ", &contexto));
+                    disc->carga = wcstol(wcstok(NULL, L" ", &contexto), NULL, 10);
                 } else if (wcsstr(tk, L"Requisito:")) {
                     wchar_t* req = wcstok(NULL, L",", &contexto);
                     if (wcscmp(req, L"0") == 0 || wcscmp(req, L"Nenhum") == 0) {
                         disc->requisitos = (wchar_t**)malloc(MAX_REQUISITOS * sizeof(wchar_t*));
+                        disc->requisitos[0] = NULL;
                     } else {
                         //multiplos requisitos
                         disc->requisitos = (wchar_t**)malloc(MAX_REQUISITOS * sizeof(wchar_t*));
                         wchar_t* req_tk;
-                        wchar_t* req_contexto = NULL;
                         int j = 0;
                         req_tk = wcstok(req, L"_", &contexto);
                         while (req_tk && j < MAX_REQUISITOS) {
@@ -511,17 +534,16 @@ Curso* carregarCurso(const char* arq_disc, const char* arq_prof, const char* arq
                 if (aluno_atual) {
                     curso->alunos[i++] = aluno_atual;
                     curso->qtd_alunos++;
+
                 }
                 
                 aluno_atual = (Aluno*)malloc(sizeof(Aluno));
-                wchar_t* tk = wcstok(linhas, L",", NULL);
                 aluno_atual->nome = wcsdup(wcstok(NULL, L",", NULL));
                 
                 //prox perido
                 fgetws(linhas, 10000, file);
-                tk = wcstok(linhas, L":", NULL);
-                aluno_atual->periodo = wcstol(wcstok(NULL, L",", NULL));
-                
+                wchar_t* contexto = NULL;  
+                aluno_atual->periodo = wcstol(wcstok(NULL, L" ", &contexto), NULL, 10);                
                 //init disc vetor
                 aluno_atual->disciplinas_feitas = (wchar_t**)malloc(50 * sizeof(wchar_t*));
                 aluno_atual->disciplinas_falta = (wchar_t**)malloc(50 * sizeof(wchar_t*));
@@ -529,7 +551,6 @@ Curso* carregarCurso(const char* arq_disc, const char* arq_prof, const char* arq
                 
                 //disc feitas
                 while (fgetws(linhas, 10000, file) && wcsstr(linhas, L"Id:")) {
-                    tk = wcstok(linhas, L":", NULL);
                     aluno_atual->disciplinas_feitas[feitas_qtd++] = wcsdup(wcstok(NULL, L",", NULL));
                     //pula o restp
                 }
@@ -703,32 +724,22 @@ void name_process(Aluno aluno, int resto[]) {
 int main() {
     setlocale(LC_ALL, "");
     fwide(stdout, 1);
-    
+
     Aluno aluno = {.nome = L"Leandro Marcio Elias da Silva"};
-
     int resto[MAXR]; 
-
     name_process(aluno, resto);
     Situacao(resto, &aluno);
 
+    //dados do curso
     Curso* curso = carregarCurso("disciplinas.txt", "professores.txt", "alunos.txt");
-    ofertarDisc(curso);
-    liberarCurso(curso); //errado, aida falta implemntar certo
-
-    Sala* sala1 = criarSala(L"SALA201", 40, 1); //criação da sala
-    if(!sala1){
-        wprintf(L"Erro ao criar sala");
+    if (!curso) {
+        wprintf(L"Erro ao carregar dados do curso!\n");
         return 1;
     }
-    //exemplo de tentando marcar horario segunda feira (dia 4), aula 2...
-    if(marcarHorario(sala1, 4, 5)){
-        wprintf(L"Horario marcado com sucesso\n");
-    }
-    else{
-        wprintf(L"Erro ao marcar horario\n");
-    }
 
-    liberarSala(sala1);
+    //ofertar disciplinas
+    ofertarDisc(curso);
+    liberarCurso(curso);
     
     return 0;
 }
