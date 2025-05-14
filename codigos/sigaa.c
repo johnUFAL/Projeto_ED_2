@@ -245,20 +245,10 @@ Professor** buscarProfQualif(Professor** professores, int num_prof, Disciplina* 
 //funcao para ofertar as disciplinas 
 void ofertarDisc(Curso* curso) {
     //processar obrigatoriad
-    if (!curso || !curso->disciplinas || !curso->alunos || !curso->professores) {
-        wprintf(L"Dados do curso incompletos!\n");
-        return;
-    }
-
-    wprintf(L"[DEBUG] Iniciando ofertarDisc()\n");
-
-
     for (int i = 0; curso->disciplinas[i] != NULL; i++) {
         
         wprintf(L"[DEBUG] Verificando disciplina %d\n", i);
         Disciplina* disc = curso->disciplinas[i];
-        wprintf(L"[DEBUG] Nome da disciplina: %ls\n", disc->nome);
-
 
         //obg ou enfase
         if (disc->tipo == 0 || disc->peso > 0) {
@@ -542,8 +532,9 @@ Curso* carregarCurso(const char* arq_disc, const char* arq_prof, const char* arq
                 
                 //prox perido
                 fgetws(linhas, 10000, file);
-                wchar_t* contexto = NULL;  
-                aluno_atual->periodo = wcstol(wcstok(NULL, L" ", &contexto), NULL, 10);                
+                tk = wcstok(linhas, L":", NULL);
+                aluno_atual->periodo = wcstol(wcstok(NULL, L",", NULL));
+                
                 //init disc vetor
                 aluno_atual->disciplinas_feitas = (wchar_t**)malloc(50 * sizeof(wchar_t*));
                 aluno_atual->disciplinas_falta = (wchar_t**)malloc(50 * sizeof(wchar_t*));
