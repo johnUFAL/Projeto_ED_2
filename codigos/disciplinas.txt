@@ -1,44 +1,44 @@
-Periodo: 1, Nome: Programacao 1, Id: COMP359, Peso: 1, CH: 72, Requisito: 0, Horario: 6M3456, 
-Periodo: 1, Nome: Logica para Computacao, Id: COMP360, Peso: 1, CH: 72, Requisito: 0, Horario: 24M34
-Periodo: 1, Nome: Computacao Sociedade e Etica, Id: COMP361, Peso: 0, CH: 72, Requisito: 0, Horario: 24M56
-Periodo: 1, Nome: Matematica Discreta, Id: COMP362, Peso: 1, CH: 72, Requisito: 0, Horario: 24M12
-Periodo: 1, Nome: Calculo Diferencial e Integral, Id: COMP363, Peso: 1, CH: 144, Requisito: 0, Horario: 35M234
-Periodo: 2, Nome: Estrutura de Dados, Id: COMP364, Peso: 2, CH: 72, Requisito: COMP359, Horario: 24M56
-Periodo: 2, Nome: Banco de dados, Id: COMP365, Peso: 1, CH: 72, Requisito: 0, Horario: 24T34
-Periodo: 2, Nome: Org. E Arq. de Computadores, Id: COMP366, Peso: 1, CH: 72, Requisito: 0, Horario: 24T12
-Periodo: 2, Nome: Geometria Analitica, Id: COMP367, Peso: 1, CH: 72, Requisito: 0, Horario: 24M34
+Periodo: 1, Nome: Programacao 1, Id: COMP359, Peso: 1, CH: 72, Requisito: Nenhum, Horario: 6M3456, 
+Periodo: 1, Nome: Logica para Computacao, Id: COMP360, Peso: 1, CH: 72, Requisito: Nenhum, Horario: 24M34
+Periodo: 1, Nome: Computacao Sociedade e Etica, Id: COMP361, Peso: 1, CH: 72, Requisito: Nenhum, Horario: 24M56
+Periodo: 1, Nome: Matematica Discreta, Id: COMP362, Peso: 1, CH: 72, Requisito: Nenhum, Horario: 24M12
+Periodo: 1, Nome: Calculo Diferencial e Integral, Id: COMP363, Peso: 1, CH: 144, Requisito: Nenhum, Horario: 35M234
+Periodo: 2, Nome: Estrutura de Dados, Id: COMP364, Peso: 1, CH: 72, Requisito: COMP359, Horario: 24M56
+Periodo: 2, Nome: Banco de dados, Id: COMP365, Peso: 1, CH: 72, Requisito: Nenhum, Horario: 24T34
+Periodo: 2, Nome: Org. E Arq. de Computadores, Id: COMP366, Peso: 1, CH: 72, Requisito: Nenhum, Horario: 24T12
+Periodo: 2, Nome: Geometria Analitica, Id: COMP367, Peso: 1, CH: 72, Requisito: Nenhum, Horario: 24M34
 Periodo: 3, Nome: Redes de Computadores, Id: COMP368, Peso: 1, CH: 72, Requisito: COMP359, Horario: 34M56
 Periodo: 3, Nome: Teoria dos Grafos, Id: COMP369, Peso: 1, CH: 72, Requisito: COMP362_COMP364, Horario: 25T56
-Periodo: 3, Nome: Probabilidade e Estatistica, Id: COMP370, Peso: 0, CH: 72, Requisito: COMP363, Horario: 24T12
-Periodo: 3, Nome: Algebra Linear, Id: COMP371, Peso: 0, CH: 72, Requisito: COMP367, Horario: 24T34
-Periodo: 4, Nome: Programacao 2, Id: COMP372, Peso: 0, CH: 72, Requisito: COMP364_COMP365_COMP368, Horario: 25T12
-Periodo: 4, Nome: Programacao 3, Id: COMP373, Peso: 0, CH: 72, Requisito: COMP364_COMP365_COMP368, Horario: 34T34
-Periodo: 4, Nome: Projeto de Analise de Algoritmos, Id: COMP374, Peso: 0, CH: 72, Requisito: COMP364_COMP369, Horario: 35M56
-Periodo: 4, Nome: Teoria da Computacao, Id: COMP376, Peso: 0, CH: 72, Requisito: 0, Horario: 24T12
-Periodo: 5, Nome: Sistemas Operacionais, Id: COMP378, Peso: 0, CH: 72, Requisito: COMP366, Horario: 27M34
-Periodo: 5, Nome: Compiladores, Id: COMP379, Peso: 0, CH: 72, Requisito: COMP360_COMP364, Horario: 24M56
-Periodo: 5, Nome: Inteligencia Artificial, Id: COMP380, Peso: 0, CH: 72, Requisito: COMP360_COMP364, Horario: 35M34
-Periodo: 5, Nome: Computacao Grafica, Id: COMP381, Peso: 0, CH: 72, Requisito: 0, Horario: 36M56
-Periodo: 6, Nome: Projeto e Desenvolvimento de Sistemas, Id: COMP382, Peso: 0, CH: 288, Requisito: COMP555, Horario: 26T1234
-Periodo: 7, Nome: Metodologias de Pesquisa e Trabalhos Individual, Id: COMP386, Peso: 0, CH: 72, Requisito: 0, Horario: 36M34
-Periodo: 7, Nome: Nocoes de Direito, Id: COMP387, Peso: 0, CH: 72, Requisito: 0, Horario: 6T1234
-Periodo: 0, Nome: Apredizagem de Máquina, Id: COMP390, CH: 72, Requisito: Calculo 3, Horario: 24T56
-Periodo: 0, Nome: Sistemas Digitais, Id: COMP391, CH: 72, Requisito: Calculo 3, Horario: 7M1234
-Periodo: 0, Nome: Sistemas Distribuidos, Id: COMP392, CH: 72, Requisito: Nenhum, Horario: 6T1234
-Periodo: 0, Nome: Interacao Homem-Maquina, Id: COMP395, CH: 72, Requisito: Programacao 3, Horario: 24T34
-Periodo: 0, Nome: Computacao Evolucionaria, Id: COMP397, CH: 72, Requisito: Nenhum, Horario: 24T12
-Periodo: 0, Nome: Sistemas Embarcados, Id: COMP398, CH: 72, Requisito: Nenhum, Horario: 35T56
-Periodo: 0, Nome: Gerencia de Projeto, Id: COMP399, CH: 72, Requisito: Projeto e Desenvolvimento de Sistemas, Horario: 35T56
-Periodo: 0, Nome: Conceitos de Linguagem de Programacao, Id: COMP389, CH: 72, Requisito: Nenhum, Horario: 35T34
-Periodo: 0, Nome: Ciencia de Dados, Id: COMP401, CH: 72, Requisito: Probabilidade e Estatistica, Horario: 24M34
-Periodo: 0, Nome: Microcontroladores e Aplicacoes, Id: COMP402, CH: 72, Requisito: Nenhum, Horario: 24M56
-Periodo: 0, Nome: Seguranca de Sistemas Computacionais, Id: COMP403, CH: 72, Requisito: Redes de Computadores, Horario: 46M34
-Periodo: 0, Nome: Calculo 3, Id: COMP404, CH: 72, Requisito: Calculo Diferencial e Integral, Horario: 36M12
-Periodo: 0, Nome: Redes Neurais e Aprendizado Profundo, Id: COMP393, CH: 72, Requisito: Nenhum, Horario: 35T34
-Periodo: 0, Nome: Processamento Digital de Imagem, Id: COMP396, CH: 72, Requisito: Computacao Grafica, Horario: 35T12
-Periodo: 0, Nome: Visao Computacional, Id: COMP400, CH: 72, Requisito: Nenhum, Horario: NULL
-Periodo: 0, Nome: ACE 1, Id: COMP377, CH: 75, Requisito: Nenhum, Horario: 6T12
-Periodo: 0, Nome: ACE 2, Id: COMP383, CH: 75, Requisito: Nenhum, Horario: 6T23
-Periodo: 0, Nome: ACE 3, Id: COMP384, CH: 75, Requisito: Nenhum, Horario: 5T12 
-Periodo: 0, Nome: ACE 4, Id: COMP388, CH: 75, Requisito: Nenhum, Horario: 2N123 
-Periodo: 0, Nome: ACE 5, Id: COMP385, CH: 75, Requisito: Nenhum, Horario: 7M23  
+Periodo: 3, Nome: Probabilidade e Estatistica, Id: COMP370, Peso: 1, CH: 72, Requisito: COMP363, Horario: 24T12
+Periodo: 3, Nome: Algebra Linear, Id: COMP371, Peso: 1, CH: 72, Requisito: COMP367, Horario: 24T34
+Periodo: 4, Nome: Programacao 2, Id: COMP372, Peso: 1, CH: 72, Requisito: COMP364_COMP365_COMP368, Horario: 25T12
+Periodo: 4, Nome: Programacao 3, Id: COMP373, Peso: 1, CH: 72, Requisito: COMP364_COMP365_COMP368, Horario: 34T34
+Periodo: 4, Nome: Projeto de Analise de Algoritmos, Id: COMP374, Peso: 1, CH: 72, Requisito: COMP364_COMP369, Horario: 35M56
+Periodo: 4, Nome: Teoria da Computacao, Id: COMP376, Peso: 1, CH: 72, Requisito: Nenhum, Horario: 24T12
+Periodo: 5, Nome: Sistemas Operacionais, Id: COMP378, Peso: 1, CH: 72, Requisito: COMP366, Horario: 27M34
+Periodo: 5, Nome: Compiladores, Id: COMP379, Peso: 1, CH: 72, Requisito: COMP360_COMP364, Horario: 24M56
+Periodo: 5, Nome: Inteligencia Artificial, Id: COMP380, Peso: 1, CH: 72, Requisito: COMP360_COMP364, Horario: 35M34
+Periodo: 5, Nome: Computacao Grafica, Id: COMP381, Peso: 1, CH: 72, Requisito: Nenhum, Horario: 36M56
+Periodo: 6, Nome: Projeto e Desenvolvimento de Sistemas, Id: COMP382, Peso: 1, CH: 288, Requisito: COMP555, Horario: 26T1234
+Periodo: 7, Nome: Metodologias de Pesquisa e Trabalhos Individual, Id: COMP386, Peso: 1, CH: 72, Requisito: Nenhum, Horario: 36M34
+Periodo: 7, Nome: Nocoes de Direito, Id: COMP387, Peso: 1, CH: 72, Requisito: Nenhum, Horario: 6T1234
+Periodo: 0, Nome: Apredizagem de Máquina, Id: COMP390, Peso: 0, CH: 72, Requisito: COMP404, Horario: 24T56
+Periodo: 0, Nome: Sistemas Digitais, Id: COMP391, Peso: 0, CH: 72, Requisito: COMP404, Horario: 7M1234
+Periodo: 0, Nome: Sistemas Distribuidos, Id: COMP392, Peso: 0, CH: 72, Requisito: Nenhum, Horario: 6T1234
+Periodo: 0, Nome: Interacao Homem-Maquina, Id: COMP395, Peso: 0, CH: 72, Requisito: COMP373, Horario: 24T34
+Periodo: 0, Nome: Computacao Evolucionaria, Id: COMP397, Peso: 0, CH: 72, Requisito: Nenhum, Horario: 24T12
+Periodo: 0, Nome: Sistemas Embarcados, Id: COMP398, Peso: 0, CH: 72, Requisito: Nenhum, Horario: 35T56
+Periodo: 0, Nome: Gerencia de Projeto, Id: COMP399, Peso: 0, CH: 72, Requisito: COMP382, Horario: 35T56
+Periodo: 0, Nome: Conceitos de Linguagem de Programacao, Id: COMP389, Peso: 0, CH: 72, Requisito: Nenhum, Horario: 35T34
+Periodo: 0, Nome: Ciencia de Dados, Id: COMP401, Peso: 0, CH: 72, Requisito: COMP370, Horario: 24M34
+Periodo: 0, Nome: Microcontroladores e Aplicacoes, Id: COMP402, Peso: 0, CH: 72, Requisito: Nenhum, Horario: 24M56
+Periodo: 0, Nome: Seguranca de Sistemas Computacionais, Id: COMP403, Peso: 0, CH: 72, Requisito: COMP368, Horario: 46M34
+Periodo: 0, Nome: Calculo 3, Id: COMP404, Peso: 0, CH: 72, Requisito: COMP363, Horario: 36M12
+Periodo: 0, Nome: Redes Neurais e Aprendizado Profundo, Id: COMP393, Peso: 0, CH: 72, Requisito: Nenhum, Horario: 35T34
+Periodo: 0, Nome: Processamento Digital de Imagem, Id: COMP396, Peso: 0, CH: 72, Requisito: COMP381, Horario: 35T12
+Periodo: 0, Nome: Visao Computacional, Id: COMP400, Peso: 0, CH: 72, Requisito: Nenhum, Horario: NULL
+Periodo: 0, Nome: ACE 1, Id: COMP377, Peso: 0, CH: 75, Requisito: Nenhum, Horario: 6T12
+Periodo: 0, Nome: ACE 2, Id: COMP383, Peso: 0, CH: 75, Requisito: Nenhum, Horario: 6T23
+Periodo: 0, Nome: ACE 3, Id: COMP384, Peso: 0, CH: 75, Requisito: Nenhum, Horario: 5T12 
+Periodo: 0, Nome: ACE 4, Id: COMP388, Peso: 0, CH: 75, Requisito: Nenhum, Horario: 2N123 
+Periodo: 0, Nome: ACE 5, Id: COMP385, Peso: 0, CH: 75, Requisito: Nenhum, Horario: 7M23  

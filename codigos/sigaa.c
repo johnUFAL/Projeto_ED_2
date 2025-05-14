@@ -634,6 +634,171 @@ void freeCurso(Curso* curso) {
     }
 }
 
+//função para identificar a maneira como os requistos são separados para poder incluir
+wchar_t** dividir_requisitos(const wchar_t* linha) {
+    wchar_t** lista = malloc(MAX_REQUISITOS * sizeof(wchar_t*));
+    int count = 0;
+    wchar_t* copia = wcsdup(linha);
+    wchar_t* token;
+    wchar_t* context;
+
+    token = wcstok(copia, L"_", &context);
+    while (token && count < MAX_REQUISITOS) {
+        lista[count++] = wcsdup(token);
+        token = wcstok(NULL, L"_", &context);
+    }
+    lista[count] = NULL;
+    free(copia);
+    return lista;
+}
+
+//Aqui ele verifica no arquivo de texto cada valor como periodo, CH e separa através das virgulas no arquivo
+void extrair_valor(const wchar_t* linha, const wchar_t* chave, wchar_t* destino) {
+    const wchar_t* inicio = wcsstr(linha, chave);
+    if (!inicio) {
+        destino[0] = L'\0';
+        return;
+    }
+    inicio += wcslen(chave);
+    while (*inicio == L' ') inicio++; // pula espaços
+
+    const wchar_t* fim = wcschr(inicio, L',');
+    if (!fim) fim = linha + wcslen(linha); // até o final
+
+    wcsncpy(destino, inicio, fim - inicio);
+    destino[fim - inicio] = L'\0';
+}
+
+// Leitura principal do arquivo de texto para poder organizar na struct
+Disciplina** ler_disciplinas(const wchar_t* nome_arquivo, int* total) {
+    setlocale(LC_ALL, "");
+    FILE* arquivo = _wfopen(nome_arquivo, L"r, ccs=UTF-8");
+    if (!arquivo) {
+        wprintf(L"Erro ao abrir o arquivo.\n");
+        return NULL;
+    }
+
+    wchar_t linha[512];
+    Disciplina** lista = NULL;
+    *total = 0;
+
+    while (fgetws(linha, sizeof(linha) / sizeof(wchar_t), arquivo)) {
+        linha[wcscspn(linha, L"\n")] = L'\0';
+
+        wchar_t buffer[100];
+
+        Disciplina* nova = malloc(sizeof(Disciplina));
+
+        extrair_valor(linha, L"Nome:", buffer);
+        nova->nome = wcsdup(buffer);
+
+        extrair_valor(linha, L"CH:", buffer);
+        nova->carga = wcstol(buffer, NULL, 10);
+
+        extrair_valor(linha, L"Periodo:", buffer);
+        nova->periodo = wcstol(buffer, NULL, 10);
+
+        extrair_valor(linha, L"Peso:", buffer);
+        nova->tipo = wcstol(buffer, NULL, 10);
+
+        extrair_valor(linha, L"Lab:", buffer);
+        nova->lab = wcstol(buffer, NULL, 10);
+
+        extrair_valor(linha, L"Horario:", buffer);
+        nova->horario = wcsdup(buffer);
+
+        extrair_valor(linha, L"Requisito:", buffer);
+        nova->requisitos = dividir_requisitos(buffer);
+
+        lista = realloc(lista, (*total + 1) * sizeof(Disciplina*));
+        lista[*total] = nova;
+        (*total)++;
+    }
+
+    fclose(arquivo);
+    return lista;
+}
+
+int comparar_periodo_e_prereq(const void* a, const void* b) {
+    Disciplina* d1 = *(Disciplina**)a;
+    Disciplina* d2 = *(Disciplina**)b;
+
+    // Período 0 é sempre o último
+    if (d1->periodo == 0 && d2->periodo != 0) return 1;
+    if (d1->periodo != 0 && d2->periodo == 0) return -1;
+
+    // Ordena por período crescente
+    if (d1->periodo != d2->periodo)
+        return d1->periodo - d2->periodo;
+
+    // Prioriza as que têm pré-requisitos
+    int d1_tem_req = (d1->requisitos && d1->requisitos[0] && wcscmp(d1->requisitos[0], L"Nenhum") != 0);
+    int d2_tem_req = (d2->requisitos && d2->requisitos[0] && wcscmp(d2->requisitos[0], L"Nenhum") != 0);
+
+    return d2_tem_req - d1_tem_req;
+}
+
+int comparar_periodo_e_obrigatoriedade(const void* a, const void* b) {
+    Disciplina* d1 = *(Disciplina**)a;
+    Disciplina* d2 = *(Disciplina**)b;
+
+    // Período 0 sempre vai pro final
+    if (d1->periodo == 0 && d2->periodo != 0) return 1;
+    if (d1->periodo != 0 && d2->periodo == 0) return -1;
+
+    // Ordena por período crescente
+    if (d1->periodo != d2->periodo)
+        return d1->periodo - d2->periodo;
+
+    // Prioriza obrigatórias (tipo == 1)
+    return d2->tipo - d1->tipo;
+}
+
+int comparar_periodo_e_enfase(const void* a, const void* b) {
+    Disciplina* d1 = *(Disciplina**)a;
+    Disciplina* d2 = *(Disciplina**)b;
+
+    // Agora: período 0 deve vir ANTES
+    if (d1->periodo != d2->periodo)
+        return (d1->periodo == 0) ? -1 :
+               (d2->periodo == 0) ? 1 :
+               d1->periodo - d2->periodo;
+
+    // Dentro do mesmo período: peso == 0 (ênfase) vem primeiro
+    int d1_enfase = (d1->peso == 0);
+    int d2_enfase = (d2->peso == 0);
+
+    return d2_enfase - d1_enfase;
+}
+
+//Função p mostrar como ficou organizado as disciplinas, mas pode apagar se n for necessário para apresentação
+void imprimir_disciplinas_por_lotes(Disciplina** disciplinas, int total, int max_por_periodo) {
+
+    int index = 0;
+    int periodo_simulado = 1;
+
+    while (index < total) {
+        wprintf(L"\n===== Período Simulado %d =====\n", periodo_simulado);
+        for (int i = 0; i < max_por_periodo && index < total; i++, index++) {
+            Disciplina* d = disciplinas[index];
+
+            wprintf(L"\nNome: %ls\n", d->nome);
+            wprintf(L"Periodo original: %d | Carga: %d | Peso: %d | Lab: %d\n", d->periodo, d->carga, d->tipo, d->lab);
+            wprintf(L"Horário: %ls\n", d->horario);
+            wprintf(L"Requisitos: ");
+            if (d->requisitos && d->requisitos[0]) {
+                for (int j = 0; d->requisitos[j]; j++) {
+                    wprintf(L"%ls ", d->requisitos[j]);
+                }
+            } else {
+                wprintf(L"Nenhum");
+            }
+            wprintf(L"\n-----------------------------\n");
+        }
+        periodo_simulado++;
+    }
+}
+
 //parte para validar
 int value_string(wchar_t letra) { //retorna o valor de cada letra do nome 
    switch (letra) {
