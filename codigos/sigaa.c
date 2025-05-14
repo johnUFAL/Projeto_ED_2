@@ -377,7 +377,9 @@ void Situacao (int resto[], Aluno* aluno) {//essa função descreve os critério
 //parte para auxiliares e carregamento
 //carregar dados do curos nos arquivos de textos
 Curso* carregarCurso(const char* arq_disc, const char* arq_prof, const char* arq_aluno) {
-    FILE* file;
+   
+    FILE* file;wprintf(L"[DEBUG] Iniciando carregarCurso()\n");
+
     wchar_t linhas[200];
     Curso* curso = (Curso*)malloc(sizeof(Curso));
     if (!curso) return NULL;
@@ -392,7 +394,15 @@ Curso* carregarCurso(const char* arq_disc, const char* arq_prof, const char* arq
     curso->qtd_prof = 0;
 
     //carregando disc
-    file = fopen(arq_disc, "r");
+    wprintf(L"[DEBUG] Abrindo arquivo de disciplinas: %s\n", arq_disc);
+
+    file = fopen(arq_disc, "r, ccs=UTF-8"); //win
+    if (!file) {
+        wprintf(L"Erro ao abrir arquivo de disciplinas\n");
+        free(curso);
+        return NULL;
+    }
+
     if (file) {
         int cont = 0;
         while (fgetws(linhas, 200, file)) cont++;
@@ -401,7 +411,17 @@ Curso* carregarCurso(const char* arq_disc, const char* arq_prof, const char* arq
         curso->disciplinas = (Disciplina**)malloc((cont+1) * sizeof(Disciplina*));
         int i = 0;
         while (fgetws(linhas, 200, file)) {
+            if (wcslen(linhas) < 2) continue; //linhas vazias puladas
             Disciplina* disc = (Disciplina*)malloc(sizeof(Disciplina));
+            if (!disc) {
+                printf("Erro ao alocar memória para disciplina\n");
+                continue;
+            }
+            disc->nome = NULL;
+            disc->id = NULL;
+            disc->horario = NULL;
+            disc->requisitos = NULL;
+
             wchar_t* tk;
             wchar_t* contexto = NULL;
 
@@ -412,10 +432,16 @@ Curso* carregarCurso(const char* arq_disc, const char* arq_prof, const char* arq
                     disc->periodo = wcstol(wcstok(NULL, L" ", &contexto), NULL, 10);
                 } else if (wcsstr(tk, L"Nome:")) {
                     disc->nome = wcsdup(wcstok(NULL, L",", &contexto));
+                    if (!disc->nome) {
+                        wprintf(L"Erro ao alocar nome wcsdup\n");
+                    }
                 } else if (wcsstr(tk, L"Id:")) {
                     wchar_t id_str[20];
                     swprintf(id_str, 20, L"%ld", wcstol(wcstok(NULL, L" ", &contexto), NULL, 10));
                     disc->id = wcsdup(id_str);
+                    if (!disc->id) {
+                        wprintf(L"Erro ao alocar id wcsdup\n");
+                    }
                 } else if (wcsstr(tk, L"Peso:")) {
                     disc->peso = wcstol(wcstok(NULL, L" ", &contexto), NULL, 10);
                 } else if (wcsstr(tk, L"CH:")) {
@@ -433,6 +459,9 @@ Curso* carregarCurso(const char* arq_disc, const char* arq_prof, const char* arq
                         req_tk = wcstok(req, L"_", &contexto);
                         while (req_tk && j < MAX_REQUISITOS) {
                             disc->requisitos[j++] = wcsdup(req_tk);
+                            if (!disc->requisitos[j-1]) {
+                                wprintf(L"Erro ao alocar requisito wcsdup\n");
+                            }
                             req_tk = wcstok(NULL, L"_", &contexto);
                         }
                         disc->requisitos[j] = NULL;
@@ -440,7 +469,10 @@ Curso* carregarCurso(const char* arq_disc, const char* arq_prof, const char* arq
                 }
                 else if (wcsstr(tk, L" Horario:")) {
                     disc->horario = wcsdup(wcstok(NULL, L",", &contexto));
-                }
+                    if (!disc->horario) {
+                        wprintf(L"Erro ao alocar horario wcsdup\n");
+                    }
+                }   
                 tk = wcstok(NULL, L",", &contexto);
             }
 
@@ -455,7 +487,15 @@ Curso* carregarCurso(const char* arq_disc, const char* arq_prof, const char* arq
     }
 
     //carregar prof
-    file = fopen(arq_prof, "r");
+    wprintf(L"[DEBUG] Disciplinas carregadas. Abrindo professores: %s\n", arq_prof);
+
+    file = fopen(arq_prof, "r, ccs=UTF-8");
+    if (!file) {
+        wprintf(L"Erro ao abrir arquivo de professores\n");
+        free(curso);
+        return NULL;
+    }
+
     if (file) {
         int cont = 0;
         while (fgetws(linhas, 200, file)) cont++;
@@ -466,6 +506,10 @@ Curso* carregarCurso(const char* arq_disc, const char* arq_prof, const char* arq
         int i = 0;
         while (fgetws(linhas, 200, file)) {
             Professor* prof = (Professor*)malloc(sizeof(Professor));
+            if (!prof) {
+                printf("Erro ao alocar memória para professor\n");
+                continue;
+            }
             wchar_t* tk;
             wchar_t* contexto = NULL;
 
@@ -507,7 +551,14 @@ Curso* carregarCurso(const char* arq_disc, const char* arq_prof, const char* arq
     }
 
     //carregar aluno
-    file = fopen(arq_aluno, "r");
+    wprintf(L"[DEBUG] Professores carregados. Abrindo alunos: %s\n", arq_aluno);
+
+    file = fopen(arq_aluno, "r, ccs=UTF-8");
+    if (!file) {
+        wprintf(L"Erro ao abrir arquivo de alunos\n");
+        free(curso);
+        return NULL;
+    }
     if (file) {
         int cont = 0;
         while (fgetws(linhas, 10000, file)) {
@@ -516,6 +567,9 @@ Curso* carregarCurso(const char* arq_disc, const char* arq_prof, const char* arq
         rewind(file);
 
         curso->alunos = (Aluno**)malloc((cont+1) * sizeof(Aluno*));
+        if (!curso->alunos) {
+            printf("Erro ao alocar memória para alunos\n");
+        }
         
         Aluno* aluno_atual = NULL;
         int i = 0;
@@ -528,12 +582,16 @@ Curso* carregarCurso(const char* arq_disc, const char* arq_prof, const char* arq
                 }
                 
                 aluno_atual = (Aluno*)malloc(sizeof(Aluno));
+                if (!aluno_atual) {
+                    printf("Erro ao alocar memória para aluno atual\n");
+                    continue;
+                }
+                
                 aluno_atual->nome = wcsdup(wcstok(NULL, L",", NULL));
                 
                 //prox perido
                 fgetws(linhas, 10000, file);
-                tk = wcstok(linhas, L":", NULL);
-                aluno_atual->periodo = wcstol(wcstok(NULL, L",", NULL));
+                aluno_atual->periodo = wcstol(wcstok(NULL, L",", NULL), NULL, 10);
                 
                 //init disc vetor
                 aluno_atual->disciplinas_feitas = (wchar_t**)malloc(50 * sizeof(wchar_t*));
@@ -558,6 +616,8 @@ Curso* carregarCurso(const char* arq_disc, const char* arq_prof, const char* arq
         curso->alunos[i] = NULL;
         fclose(file);
     }
+    wprintf(L"[DEBUG] Curso carregado com sucesso\n");
+
     return curso;
 }
 
