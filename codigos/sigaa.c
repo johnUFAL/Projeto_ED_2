@@ -12,6 +12,7 @@
 #include <wchar.h>
 #include <wctype.h>
 
+
 //coisa do LINUX, aparentemente precisa disso
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE  // Para wcsdup no Linux
@@ -92,6 +93,31 @@ typedef struct {
     int qtd_disciplinas;  
     int qtd_ofertas;
 } Curso;
+
+int extrairDia(wchar_t* horario) {
+    // Exemplo: se o horário = L"2M34", retornar 2
+    return horario[0] - L'0'; 
+}
+
+int comparar_periodo_e_obrigatoriedade(const void* a, const void* b) {
+    Disciplina* d1 = *(Disciplina**)a;
+    Disciplina* d2 = *(Disciplina**)b;
+
+    // Período 0 sempre vai para o final
+    if (d1->periodo == 0 && d2->periodo != 0) return 1;
+    if (d1->periodo != 0 && d2->periodo == 0) return -1;
+
+    // Ordena por período crescente
+    if (d1->periodo != d2->periodo)
+        return d1->periodo - d2->periodo;
+
+    // Prioriza obrigatórias (tipo 0) sobre eletivas (tipo 1)
+    if (d1->tipo != d2->tipo)
+        return d1->tipo - d2->tipo;
+
+    // Desempate por ordem alfabética (nome da disciplina)
+    return wcscmp(d1->nome, d2->nome);
+}
 
 //criacao de salas
 Sala* criarSala(const wchar_t* codigo, int capacidade, int eh_lab){
@@ -236,51 +262,55 @@ void marcarHorarioProfessor(Professor* prof, int dia, int hora_inicio, int carga
 
 //adaptado para ter limite maximo de 1 disciplina
 //achar prof qualificado
-Professor** buscarProfQualif(Professor** professores, int num_prof, Disciplina* disciplina, int* prof_achados) {
+Professor** buscarProfQualif(Professor** professores, int num_prof, Disciplina* disciplina, int* prof_achados, wchar_t* semestre_atual, Curso* curso) {
     Professor** qualificados = malloc(num_prof * sizeof(Professor*));
-    *prof_achados = 0; //contador para professores aptos
+    *prof_achados = 0; // Contador para professores aptos
 
     for (int i = 0; i < num_prof; i++) {
-        //verifica se o professor já tem disciplina no semestre atual
         int tem_disciplina = 0;
+
+        // Verifica se o professor já tem disciplina no semestre atual
         for (int o = 0; o < curso->qtd_ofertas; o++) {
             Oferta* oferta = curso->ofertas[o];
-            if (oferta->professor == professores[i] && wcscmp(oferta->semestre, semestre_atual) == 0) {
+            if (oferta->professor == professores[i] &&
+                wcscmp(oferta->semestre, semestre_atual) == 0) {
                 tem_disciplina = 1;
                 break;
             }
         }
+
         if (tem_disciplina) continue;
 
-        // Critérios básicos de qualificação
+        // Critérios de qualificação
         if (disciplina->periodo <= 4) {
             qualificados[(*prof_achados)++] = professores[i];
-            continue;
-        }
-        for (int j = 0; professores[i]->especializacao[j] != NULL; j++) {
-            if (wcsstr(professores[i]->especializacao[j], L"Computação") != NULL ||
-                wcsstr(professores[i]->especializacao[j], L"Engenharia") != NULL) {
-                qualificados[(*prof_achados)++] = professores[i];
-                break;
+        } else {
+            for (int j = 0; professores[i]->especializacao[j] != NULL; j++) {
+                if (wcsstr(professores[i]->especializacao[j], L"Computação") != NULL ||
+                    wcsstr(professores[i]->especializacao[j], L"Engenharia") != NULL) {
+                    qualificados[(*prof_achados)++] = professores[i];
+                    break;
+                }
             }
         }
     }
+
     return qualificados;
 }
+
+
 
 //adaptado tambem
 //funcao para ofertar as disciplinas com professor (2 funcao principal)
 void ofertarDisc(Curso* curso, wchar_t* semestre_atual) {
-    // Ordena disciplinas para priorizar obrigatórias e menor período
+    // Ordena disciplinas por período e obrigatoriedade
     qsort(curso->disciplinas, curso->qtd_disciplinas, sizeof(Disciplina*), comparar_periodo_e_obrigatoriedade);
 
     for (int i = 0; i < curso->qtd_disciplinas; i++) {
-        wprintf(L"[DEBUG] Verificando disciplina %d\n", i);
         Disciplina* disc = curso->disciplinas[i];
+        wprintf(L"[DEBUG] Verificando disciplina %ls\n", disc->nome);
 
         if (disc->tipo == 0 || disc->peso > 0) {
-            wprintf(L"[DEBUG] Chamando decisaoOfertaDisc()\n");
-
             int pode_ofertar = decisaoOfertaDisc(disc, curso->alunos, curso->qtd_alunos, PRAZO_MAX);
             int prof_encontrado = 0;
 
@@ -298,11 +328,11 @@ void ofertarDisc(Curso* curso, wchar_t* semestre_atual) {
                     wprintf(L"%ls: %ls\n", quali[0]->nome, disc->nome);
                     wprintf(L"------------------------------------------------\n");
 
-                    // Registrar a oferta
+                    // Criar nova oferta
                     Oferta* nova_oferta = malloc(sizeof(Oferta));
                     nova_oferta->disciplina = disc;
                     nova_oferta->professor = quali[0];
-                    nova_oferta->sala = NULL; // se tiver lógica para sala, implementar aqui
+                    nova_oferta->sala = NULL; // implementar lógica de alocação de sala se necessário
                     wcscpy(nova_oferta->semestre, semestre_atual);
 
                     curso->ofertas[curso->qtd_ofertas++] = nova_oferta;
@@ -736,9 +766,9 @@ void extrair_valor(const wchar_t* linha, const wchar_t* chave, wchar_t* destino)
 }
 
 // Leitura principal do arquivo de texto para poder organizar na struct
-Disciplina** ler_disciplinas(const wchar_t* nome_arquivo, int* total) {
-    setlocale(LC_ALL, "");
-    FILE* arquivo = _wfopen(nome_arquivo, L"r, ccs=UTF-8");
+Disciplina** ler_disciplinas(const char* nome_arquivo, int* total) {
+    setlocale(LC_ALL, ""); // Garante suporte a UTF-8 no terminal
+    FILE* arquivo = fopen(nome_arquivo, "r");
     if (!arquivo) {
         wprintf(L"Erro ao abrir o arquivo.\n");
         return NULL;
@@ -752,7 +782,6 @@ Disciplina** ler_disciplinas(const wchar_t* nome_arquivo, int* total) {
         linha[wcscspn(linha, L"\n")] = L'\0';
 
         wchar_t buffer[100];
-
         Disciplina* nova = malloc(sizeof(Disciplina));
 
         extrair_valor(linha, L"Nome:", buffer);
@@ -785,6 +814,7 @@ Disciplina** ler_disciplinas(const wchar_t* nome_arquivo, int* total) {
     return lista;
 }
 
+
 int comparar_periodo_e_prereq(const void* a, const void* b) {
     Disciplina* d1 = *(Disciplina**)a;
     Disciplina* d2 = *(Disciplina**)b;
@@ -804,21 +834,7 @@ int comparar_periodo_e_prereq(const void* a, const void* b) {
     return d2_tem_req - d1_tem_req;
 }
 
-int comparar_periodo_e_obrigatoriedade(const void* a, const void* b) {
-    Disciplina* d1 = *(Disciplina**)a;
-    Disciplina* d2 = *(Disciplina**)b;
 
-    // Período 0 sempre vai pro final
-    if (d1->periodo == 0 && d2->periodo != 0) return 1;
-    if (d1->periodo != 0 && d2->periodo == 0) return -1;
-
-    // Ordena por período crescente
-    if (d1->periodo != d2->periodo)
-        return d1->periodo - d2->periodo;
-    
- // Prioriza disciplinas obrigatórias (tipo == 0) antes das eletivas (tipo == 1)
-    return d1->tipo - d2->tipo;
-}
 
 int comparar_periodo_e_enfase(const void* a, const void* b) {
     Disciplina* d1 = *(Disciplina**)a;
@@ -924,49 +940,51 @@ void name_process(Aluno aluno, int resto[]) {
     return;
 }
 
-//main
 int main() {
+    // Ativa suporte a caracteres Unicode no terminal
     setlocale(LC_ALL, "");
-    fwide(stdout, 1);
+    fwide(stdout, 1); // Garante modo wide para wprintf
 
     Aluno aluno = {.nome = L"Leandro Marcio Elias da Silva"};
     int resto[MAXR]; 
+
     name_process(aluno, resto);
     Situacao(resto, &aluno);
 
-    Curso* curso = (Curso*)malloc(sizeof(Curso));
+    // Aloca e inicializa a estrutura Curso
+    Curso* curso = malloc(sizeof(Curso));
     if (!curso) {
         perror("Erro ao alocar memória para o curso");
         return 1;
     }
 
-    //inicializar o curso
-    curso->nome = (wchar_t*)malloc(100 * sizeof(wchar_t));
+    curso->nome = malloc(100 * sizeof(wchar_t));
     wcscpy(curso->nome, L"Ciência da Computação");
 
-    //carrega os txt
+    // Carrega dados dos arquivos
     carregarDisc("disciplinas.txt", &curso->disciplinas, &curso->qtd_disciplinas);
     carregarProf("professores.txt", &curso->professores, &curso->qtd_prof);
     carregarAluno("alunos.txt", &curso->alunos, &curso->qtd_alunos);
 
-    //dados do curso
-    curso->ofertas = NULL;
+    // Inicializa ponteiros e contadores
+    curso->ofertas = malloc(sizeof(Oferta*) * curso->qtd_disciplinas); // Garantir espaço
     curso->qtd_ofertas = 0;
+
     curso->salas = NULL;
     curso->qtd_salas = 0;
-    
-    //indices do curso
-        wprintf(L"Curso: %ls\n", curso->nome);
-        wprintf(L"Disciplinas: %d\n", curso->qtd_disciplinas);
-        wprintf(L"Professores: %d\n", curso->qtd_prof);
-        wprintf(L"Alunos: %d\n", curso->qtd_alunos);
-  
-    //ofertar disciplinas
-    ofertarDisc(curso);
-   
-    //libera memoria
-    freeCurso(curso);
+
+    // Informações do curso
+    wprintf(L"Curso: %ls\n", curso->nome);
+    wprintf(L"Disciplinas: %d\n", curso->qtd_disciplinas);
+    wprintf(L"Professores: %d\n", curso->qtd_prof);
+    wprintf(L"Alunos: %d\n", curso->qtd_alunos);
+
+    // Processa oferta de disciplinas
+    ofertarDisc(curso, L"2025.1");
+
+    // Liberação de memória
+    freeCurso(curso);  // Esta função deve liberar tudo que estiver dentro de `curso`
     free(curso);
-    
+
     return 0;
 }
