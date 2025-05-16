@@ -203,65 +203,115 @@ int decisaoOfertaDisc(Disciplina* disciplina, Aluno** alunos, int num_alunos, in
     return 1; // verdadeiro
   
 }
+//essa função tem o objetivo de encontrar um bloco contínuo de horários disponíveis na agenda de um professor
+//é aqui que vamos garantir que ele seja alocado no menor numero de dias possiveis
+void buscarBlocoHorarioDisponivel(Professor* prof, int carga, int* dia_out, int* hora_out) {
+    for (int dia = 0; dia < 6; dia++) {
+        int count = 0;
+        for (int hora = 0; hora < 12; hora++) {
+            if (prof->disponibilidade[dia][hora] == 0) {
+                count++;
+                if (count == carga) {
+                    // bloco encontrado, hora inicial = hora - carga + 1
+                    *dia_out = dia;
+                    *hora_out = hora - carga + 1;
+                    return;
+                }
+            } else {
+                count = 0; // reset quando encontrar ocupado
+            }
+        }
+    }
+    // se não achou nenhum bloco
+    *dia_out = -1;
+    *hora_out = -1; 
+}
 
+//aqui vai marcar o horario do professor, para se por exemplo ele ja tem aula de 7h as 10h nao pegar esse horario em tal dia
+void marcarHorarioProfessor(Professor* prof, int dia, int hora_inicio, int carga) {
+    for (int i = 0; i < carga; i++) {
+        prof->disponibilidade[dia][hora_inicio + i] = 1; // marca como ocupado
+    }
+}
+
+//adaptado para ter limite maximo de 1 disciplina
 //achar prof qualificado
 Professor** buscarProfQualif(Professor** professores, int num_prof, Disciplina* disciplina, int* prof_achados) {
     Professor** qualificados = malloc(num_prof * sizeof(Professor*));
-    *prof_achados = 0; //contador para professor aptos
+    *prof_achados = 0; //contador para professores aptos
 
     for (int i = 0; i < num_prof; i++) {
-        //as basicas, perido 4 pra baixo (ED ne basico nao oxi)
+        //verifica se o professor já tem disciplina no semestre atual
+        int tem_disciplina = 0;
+        for (int o = 0; o < curso->qtd_ofertas; o++) {
+            Oferta* oferta = curso->ofertas[o];
+            if (oferta->professor == professores[i] && wcscmp(oferta->semestre, semestre_atual) == 0) {
+                tem_disciplina = 1;
+                break;
+            }
+        }
+        if (tem_disciplina) continue;
+
+        // Critérios básicos de qualificação
         if (disciplina->periodo <= 4) {
             qualificados[(*prof_achados)++] = professores[i];
             continue;
         }
         for (int j = 0; professores[i]->especializacao[j] != NULL; j++) {
-            //verfiica a especializaçao do professor, ainda esta simples
             if (wcsstr(professores[i]->especializacao[j], L"Computação") != NULL ||
                 wcsstr(professores[i]->especializacao[j], L"Engenharia") != NULL) {
                 qualificados[(*prof_achados)++] = professores[i];
                 break;
-                }
             }
-        } 
+        }
+    }
     return qualificados;
 }
 
+//adaptado tambem
 //funcao para ofertar as disciplinas com professor (2 funcao principal)
-void ofertarDisc(Curso* curso) {
-    //processar obrigatoriad
-    for (int i = 0; curso->disciplinas[i] != NULL; i++) {
-        
+void ofertarDisc(Curso* curso, wchar_t* semestre_atual) {
+    // Ordena disciplinas para priorizar obrigatórias e menor período
+    qsort(curso->disciplinas, curso->qtd_disciplinas, sizeof(Disciplina*), comparar_periodo_e_obrigatoriedade);
+
+    for (int i = 0; i < curso->qtd_disciplinas; i++) {
         wprintf(L"[DEBUG] Verificando disciplina %d\n", i);
         Disciplina* disc = curso->disciplinas[i];
 
-        //obg ou enfase
         if (disc->tipo == 0 || disc->peso > 0) {
             wprintf(L"[DEBUG] Chamando decisaoOfertaDisc()\n");
 
             int pode_ofertar = decisaoOfertaDisc(disc, curso->alunos, curso->qtd_alunos, PRAZO_MAX);
             int prof_encontrado = 0;
-            
+
             wprintf(L"[DEBUG] decisaoOfertaDisc retornou: %d\n", pode_ofertar);
 
-            
             if (pode_ofertar) {
                 wprintf(L"[DEBUG] Chamando buscarProfQualif()\n");
 
-                Professor** quali = buscarProfQualif(curso->professores, curso->qtd_prof, disc, &prof_encontrado);
-                
+                Professor** quali = buscarProfQualif(curso->professores, curso->qtd_prof, disc, &prof_encontrado, semestre_atual, curso);
+
                 wprintf(L"[DEBUG] buscarProfQualif retornou %d professor(es)\n", prof_encontrado);
 
                 if (prof_encontrado > 0) {
-                    //o primeiro prof qualificadfo eh o que eh
                     wprintf(L"\n----- Professores e sua(s) Disciplina(s) -----\n");
                     wprintf(L"%ls: %ls\n", quali[0]->nome, disc->nome);
                     wprintf(L"------------------------------------------------\n");
+
+                    // Registrar a oferta
+                    Oferta* nova_oferta = malloc(sizeof(Oferta));
+                    nova_oferta->disciplina = disc;
+                    nova_oferta->professor = quali[0];
+                    nova_oferta->sala = NULL; // se tiver lógica para sala, implementar aqui
+                    wcscpy(nova_oferta->semestre, semestre_atual);
+
+                    curso->ofertas[curso->qtd_ofertas++] = nova_oferta;
                 } else {
                     wprintf(L"----- Professor Externo Necessario -----\n");
                     wprintf(L"Considere solicitar professor de outro instituto para: %ls\n", disc->nome);
                     wprintf(L"------------------------------------------------\n");
                 }
+
                 free(quali);
             } else {
                 wprintf(L"[DEBUG] Disciplina não será ofertada\n");
@@ -270,8 +320,9 @@ void ofertarDisc(Curso* curso) {
                 wprintf(L"------------------------------------------------\n");
             }
         }
-    }    
+    }
 }
+
 
 //parte para estrategias de ofertas e etc
 void Situacao (int resto[], Aluno* aluno) {//essa função descreve os critérios estabelecidos pela professora{
@@ -388,6 +439,21 @@ void carregarDisc(const char* nome_arq, Disciplina*** disciplinas, int* cont) {
         }
     }
     fclose(file);
+}
+int contarDiasAlocados(Professor* prof, Curso* curso, wchar_t* semestre_atual) {
+    int diasAlocados[6] = {0};
+    for (int i = 0; i < curso->qtd_ofertas; i++) {
+        Oferta* oferta = curso->ofertas[i];
+        if (oferta->professor == prof && wcscmp(oferta->semestre, semestre_atual) == 0) {
+            // Supondo que oferta->horario tem um formato "DHH:MM-HH:MM" onde D é dia (0..5)
+            // ou algo que permita identificar o dia
+            int dia = extrairDia(oferta->horario);
+            diasAlocados[dia] = 1;
+        }
+    }
+    int soma = 0;
+    for (int d = 0; d < 6; d++) soma += diasAlocados[d];
+    return soma;
 }
 
 void carregarProf(const char* nome_arq, Professor*** professores, int* cont) {
@@ -749,9 +815,9 @@ int comparar_periodo_e_obrigatoriedade(const void* a, const void* b) {
     // Ordena por período crescente
     if (d1->periodo != d2->periodo)
         return d1->periodo - d2->periodo;
-
-    // Prioriza obrigatórias (tipo == 1)
-    return d2->tipo - d1->tipo;
+    
+ // Prioriza disciplinas obrigatórias (tipo == 0) antes das eletivas (tipo == 1)
+    return d1->tipo - d2->tipo;
 }
 
 int comparar_periodo_e_enfase(const void* a, const void* b) {
