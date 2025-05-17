@@ -12,43 +12,48 @@ c=9 v=8 b=3 n=2 m=5 ó=6 õ=7 ô=6 â=1 ê=2
 
 Faça um programa que gerar a oferta acadêmica do Curso de Ciência da Computação do Instituto de Computação da UFAL, 
 considerando o último plano pedagógico PPC2019. 
-*Não é permitido que o um professor ou sala estejam alocados em mais de 
-uma disciplina no mesmo dia e horários. 
+-> Não é permitido que o um professor ou sala estejam alocados em mais de uma disciplina no mesmo dia e horários
 -> A carga horária do professor e sua formação devem ser consideradas para alocá-lo a uma disciplina
 -> Por convenção todos os professores do curso estão habilitados a lecionar todas as disciplinas dos 4 primeiros períodos do curso
--> As disciplinas de enfase e dos 4 últimos períodos do curso alocados de acordo com o trabalho de mestrado e 
+-> As disciplinas de enfase e dos 4 últimos períodos do curso devem ser alocadas de acordo com o trabalho de mestrado e 
 doutorado do professor 
 -> As salas laboratórios devem ser alocadas preferencialmente para as disciplinas que envolvam programação
--> É obrigatório que o professor esteja matriculado em pelo menos 1 disciplina.
+-> É obrigatório que o professor esteja matriculado em pelo menos 1 disciplina
+-> Todas as disciplinas obrigatórias e de enfase devem ser ofertadas, a menos que:
+    o número de alunos a serem matriculados na mesma for inferior a 10 e nenhum deles esteja no prazo máximo de conclusão de curso
+    ou que o número de alunos a serem matriculados na mesma é igual a 0 
+    ou se não existir professor capacitado a ministrar a referida disciplina (o que acontece hoje em dia com a eletiva de FPGA)
+-> É impedido a todo professor dar 4 aulas seguidas
 
+(Limite de Disciplinas por Professor por Semestre)
 O professor deve ter um limite máximo de disciplina por semestre planejado, igual a:
 some todos os números do seu primeiro nome e divida o resultado por 3, se o valor do resto for:
 0 = máximo 3
 1 = máximo 2
 2 = máximo 1
 
-Todas as disciplinas obrigatórias e de enfase devem ser ofertadas, a menos que o número de alunos a serem matriculados na mesma for 
-inferior a 10 e nenhum deles esteja em no prazo máximo de conclusão de curso; que o número de alunos a serem matriculados na mesma é igual 
-a 0; e que não existir professor capacitado a ministrar a referida disciplina ( o que acontece hoje em dia com a eletiva de FPGA)
-some todos os números do seu próximo nome e divida o resultado por 3, se o valor do resto for :
+(Solução para Disciplina sem Professor)
+some todos os números do seu próximo nome e divida o resultado por 3, se o valor do resto for:
 0 = considere a possibilidade de solicitar um professor de outro instituto para lecionar a disciplina
 1 = considere a possibilidade de solicitar um professor substituto para lecionar a disciplina
 2 = considere a possibilidade de dividir a disciplina entre mais de um professor do IC para lecionar a disciplina
 
+(Como distribuir o professor nos dias)
 A coordenação deve decidir como a alocação do professor deve ser feita, respeitando a sua carga horária e a questão de impedimento de 4 
 horas de aula seguidas:
-some todos os números do seu próximo nome e divida o resultado por 3, se o valor do resto for :
+some todos os números do seu próximo nome e divida o resultado por 3, se o valor do resto for:
 0 = os professores deve ser alocados no menor números de dias possíveis
 1 = os professores deve ser alocados no menor números de dias possíveis
 2 = os professores deve ser alocados de modo a ir ao IC todos os dias
 
+(Ordem de prioridade para ofertar disciplinas)
 A oferta das disciplina deve seguir a seguinte orientação:
-some todos os números do seu próximo nome e divida o resultado por 3, se o valor do resto for :
+some todos os números do seu próximo nome e divida o resultado por 3, se o valor do resto for:
 0 = as disciplinas com pré requisitos tem maior prioridade
 1 = as disciplinas obrigatórias devem ter maior prioridade
 2 = as disciplinas de ênfase devem ter maior prioridade
 
-Não esqueça de considerar as disciplinas de aces obrigatórias.
+Não esqueça de considerar as disciplinas de ACES obrigatórias.
 
 Os dados de entrada serão o histórico dos alunos do curso como na entrada da primeira parte do projeto, considere a lista dos professores 
 no site: https://ic.ufal.br/pt-br/institucional/docentes ao entrar no currículo Lattes de cada professor você terá acesso a sua formação 

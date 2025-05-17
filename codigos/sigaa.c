@@ -12,7 +12,6 @@
 #include <wchar.h>
 #include <wctype.h>
 
-
 //coisa do LINUX, aparentemente precisa disso
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE  // Para wcsdup no Linux
@@ -54,44 +53,44 @@ typedef struct {
 } Professor;
 
 typedef struct {
-    wchar_t* codigo;
-    int capacidade;
     int eh_lab; //0 se nao, 1 se sim
+    int capacidade;
     int** disponibilidade;
+    wchar_t* codigo;
 } Sala;
 
 typedef struct {
-    wchar_t* nome;
-    int matricula;
     int periodo;
-    wchar_t** disciplinas_feitas;
+    int matricula;
+    wchar_t* nome;
     wchar_t** disciplinas_falta;
+    wchar_t** disciplinas_feitas;
 } Aluno;
 
 //o que tiver qtd provavelmente eh um contador
 
 typedef struct {
-    Disciplina* disciplina;
-    Professor* professor;
+    int qtd; 
     Sala* sala;
     wchar_t* horario;
     wchar_t* semestre;
+    Professor* professor;
     Aluno** matriculados;
-    int qtd; 
+    Disciplina* disciplina;
 } Oferta;
 
 typedef struct {
+    int qtd_prof;
+    int qtd_salas;
+    int qtd_alunos;
+    int qtd_ofertas;
+    int qtd_disciplinas;  
+    Sala** salas;
     wchar_t* nome;
+    Aluno** alunos;
     Oferta** ofertas;
     Professor** professores;
-    int qtd_prof;
-    Sala** salas;
-    int qtd_salas;
-    Aluno** alunos;
-    int qtd_alunos;
     Disciplina** disciplinas;
-    int qtd_disciplinas;  
-    int qtd_ofertas;
 } Curso;
 
 int extrairDia(wchar_t* horario) {

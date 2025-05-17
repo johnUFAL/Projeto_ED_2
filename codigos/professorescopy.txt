@@ -1,0 +1,20 @@
+Nome: Alan Pedro da Silva, CH: , Formação: Ciência da Computação, Modelagem Computacional de Conhecimento
+Nome: Almir Pereira Guimarães, CH: , Formação: Ciência da Computação, Engenharia Elétrica
+Nome: André Luiz Lins de Aquino, CH: , Formação: Ciência da Computação
+Nome: Arturo Hernández Domínguez, CH: , Formação: Engenharia da Computação, Informática 
+Nome: Aydano Pamponet Machado, CH: , Formação: Técnico em Eletrônica, Ciência da Computação, Medicina, Informática
+Nome: Baldoino Fonseca dos Santos Neto, CH: , Formação: Ciência da Computação, Informática
+Nome: Bruno Almeida Pimentel, CH: , Formação: Ciência da Computação
+Nome: Bruno Costa e Silva Nogueira, CH: , Formação: Ciência da Computação, Engenharia da Computação
+Nome: Cid Cavalcanti de Albuquerque, CH: , Formação: Ciência da Computação, Direito
+Nome: Davi Bibiano Brito, CH: , Formação: Engenharia Elétrica, Eletrônica e Comunicações
+Nome: Erick de Andrade Barboza, CH: , Formação: Engenharia da Computação, Engenharia de Sisitemas, Engenharia Elétrica
+Nome: Evandro de Barros Costa, CH: , Formação: Ciência da Computação, Engenharia Elétrica
+Nome: Fábio José Coutinho da Silva, CH: , Formação: Ciência da Computação, Sistemas e Computação
+Nome: Fábio Paraguaçu Duarte da Costa, CH: , Formação: Ciência da Computação, Informática
+Nome: Glauber Rodrigues Leite, CH: , Formação: Engenharia da Computação, Engenharia de Controle e Automação Industrial, Informática, Engenharia Elétrica
+Nome: Ícaro Bezerra Queiroz de Araújo, CH: , Formação: Engenharia Elétrica
+Nome: Ig Ibert Bittencourt Santana Pinto, CH: , Formação: Ciência da Computação, Informática, Psicologia, Métodos e Estatística em Ciências Sociais, Fundamentos da Psicologia Positiva, Modelagem Computacional do Conhecimento
+Nome: João Raphael Souza Martins, CH: , Formação: Engenharia Elétrica, Eficiência Energética Automotiva
+Nome: Jobson de Araújo Nascimento, CH: , Formação: Energética Elétrica, Automação Industrial, Engenharia de Segurança do Trabalho
+Nome: Xu Yang, CH: 40, 
