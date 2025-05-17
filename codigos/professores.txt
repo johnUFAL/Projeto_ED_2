@@ -7,7 +7,7 @@ Nome: Aydano Pamponet Machado, CH: 40, Graduação: Ciencia da Computacao, Mestr
 Nome: Baldoino Fonseca dos Santos Neto, CH: 40, Graduação: Ciencia da Computacao, Mestrado: Informatica, Doutorado: Informatica
 Nome: Bruno Almeida Pimentel, CH: 40, Graduação: Ciencia da Computacao, Mestrado: Ciencia da Computacao, Doutorado: Ciencia da Computacao
 Nome: Bruno Costa e Silva Nogueira, CH: 40, Graduação: Engenharia da Computacao, Mestrado: Ciencia da Computacao, Doutorado: Ciencia da Computacao
--> Nome: Cid Cavalcanti de Albuquerque, CH: , Graduação: , Mestrado: , Doutorado:
+Nome: Cid Cavalcanti de Albuquerque, CH: 40, Graduação: Direito, Mestrado: Administracao, Doutorado: NULL
 Nome: Davi Bibiano Brito, CH: 40, Graduação: Telecomunicacoes, Mestrado: Engenharia Eletrica, Doutorado: Engenharia Eletrica
 Nome: Erick de Andrade Barboza, CH: 40, Graduação: Engenharia da Computacao, Mestrado: Engenharia de Sistemas, Doutorado: Engenharia Eletrica
 Nome: Evandro de Barros Costa, CH: 40, Graduação: Ciencia da Computacao, Mestrado: Engenharia Eletrica, Doutorado: Engenharia Eletrica
@@ -17,14 +17,14 @@ Nome: Glauber Rodrigues Leite, CH: 40, Graduação: Engenharia da Computacao, Me
 Nome: Icaro Bezerra Queiroz de Araujo, CH: 40, Graduação: Engenharia Eletrica, Mestrado: Engenharia Eletrica e da Computacao, Doutorado: Engenharia Eletrica e da Computacao
 Nome: Ig Ibert Bittencourt Santana Pinto, CH: 40, Graduação: Analise de Sistemas, Mestrado: Modelagem Computacional do Conhecimento, Doutorado: Ciencia da Computacao
 Nome: Joao Raphael Souza Martins, CH: 40, Graduação: Engenharia Eletrica, Mestrado: Engenharia Eletrica, Doutorado: Engenharia Eletrica
--> Nome: Jobson de Araujo Nascimento, CH: , Graduação: , Mestrado: Engenharia Eletrica, Doutorado: 
+Nome: Jobson de Araujo Nascimento, CH: 40, Graduação: Engenharia Eletrica, Mestrado: Engenharia Eletrica e Eletronica, Doutorado: NULL
 Nome: Leandro Dias da Silva, CH: 40, Graduação: Ciencia da Computacao, Mestrado: Engenharia Eletrica, Doutorado: Engenharia Eletrica
 Nome: Leandro Melo de Sales, CH: 40, Graduação: Ciencia da Computacao, Mestrado: Ciencia da Computacao, Doutorado: Ciencia da Computacao
--> Nome: Leonardo Viana Pereira, CH: , Graduação: , Mestrado: , Doutorado: Fisica
+Nome: Leonardo Viana Pereira, CH: 40, Graduação: Fisica, Mestrado: Fisica, Doutorado: Fisica
 Nome: Lucas Benevides Viana de Amorim, CH: 40, Graduação: Ciencia da Computacao, Mestrado: Modelagem Computacional de Conhecimento, Doutorado: Ciencia da Computacao
 Nome: Marcelo Costa Oliveira, CH: 40, Graduação: Ciencia da Computacao, Mestrado: Fisica Aplicada a Medicina e Biologia, Doutorado: Ciencias Medicas na area de Informatica Medica
 Nome: Marcio de Medeiros Ribeiro, CH: 40, Graduação: Ciencia da Computacao, Mestrado: Ciencia da Computacao, Doutorado: Ciencia da Computacao
--> Nome: Maria Cristina Tenorio Cavalcante Escarpini, CH: , Graduação: , Mestrado: , Doutorado:
+Nome: Maria Cristina Tenorio Cavalcante Escarpini, CH: 40, Graduação: Sistemas de Informacao, Mestrado: Modelagem Computacional de Conhecimento, Doutorado: Ciencia da Computacao 
 Nome: Mario Hozano Lucas de Souza, CH: 40, Graduação: Ciencia da Computacao, Mestrado: Ciencia da Computacao, Doutorado: Ciencia da Computacao 
 Nome: Mauricio Beltrao de Rossiter Correa, CH: 40, Graduação: Engenharia Eletrica, Mestrado: Engenharia Eletrica, Doutorado: Engenharia Eletrica 
 Nome: Olival de Gusmao Freitas Junior, CH: 40, Graduação: Ciencia da Computacao, Mestrado: Ciencia da Computacao, Doutorado: Engenharia de Producao
@@ -32,12 +32,12 @@ Nome: Petrucio Antonio Medeiros Barros, CH: 20, Graduação: Engenharia Civil, M
 Nome: Rafael de Amorim Silva, CH: 40, Graduação: Sistemas de Informacao, Mestrado: Ciencia da Computacao, Doutorado: Engenharia Eletronica e Computacao
 Nome: Ranilson Oscar Araujo Paiva, CH: 2, Graduação: Sistemas de Informacao, Mestrado: Modelagem Computacional de Conhecimento, Doutorado: Ciencia da Computacao
 Nome: Rian Gabriel Santos Pinheiro, CH: 40, Graduação: Ciencia da Computacao, Mestrado: Computacao, Doutorado: Computacao
--> Nome: Roberta Vilhena Vieira Lopes, CH: , Graduação: , Mestrado: , Doutorado: Ciencias da Computacao
--> Nome: Rodrigo de Barros Paes, CH: , Graduação: , Mestrado: , Doutorado: Informatica
+Nome: Roberta Vilhena Vieira Lopes, CH: 40, Graduação: Ciencias da Computacao, Mestrado: Ciencias da Computacao, Doutorado: Ciencias da Computacao
+Nome: Rodrigo de Barros Paes, CH: 40, Graduação: Ciencia da Computacao, Mestrado: Ciencia da Computacao, Doutorado: Informatica
 Nome: Rodrigo Jose Sarmento Peixoto, CH: 40, Graduação: Engenharia da Computacao, Mestrado: Modelagem Computacional de Conhecimento, Doutorado: NULL
 Nome: Thales Miranda de Almeida Vieira, CH: 40, Graduação: Ciencia da Computacao, Mestrado: Matematica, Doutorado: Matematica
 Nome: Thiago Damasceno Cordeiro, CH: 40, Graduação: Engenharia da Computacao, Mestrado: Engenharia Eletrica, Doutorado: Engenharia Eletrica 
 Nome: Tiago Alves de Almeida, CH: 40, Graduação: Automacao Industrial, Mestrado: Engenharia Eletrica, Doutorado: Engenharia Eletrica
 Nome: Tiago Figueiredo Vieira, CH: 40, Graduação: Engenharia Eletronica, Mestrado: Engenharia Eletrica, Doutorado: Engenharia de Controle e Computacao  
--> Nome: Willy Carvalho Tiengo, CH: , Graduação: , Mestrado: Engenharia de Software, Doutorado: 
+Nome: Willy Carvalho Tiengo, CH: 40, Graduação: Ciencia da Computacao, Mestrado: Ciencia da Computacao, Doutorado: Ciencia da Computacao
 Nome: Xu Yang, CH: 40, Graduação: Matematica, Mestrado: Matematica computacional e modelagem, Doutorado: Matematica aplicada
