@@ -22,7 +22,7 @@ Periodo: 5, Nome: Computacao Grafica, Id: COMP381, Peso: 1, CH: 72, Requisito: N
 Periodo: 6, Nome: Projeto e Desenvolvimento de Sistemas, Id: COMP382, Peso: 1, CH: 288, Requisito: COMP555, Horario: 26T1234
 Periodo: 7, Nome: Metodologias de Pesquisa e Trabalhos Individual, Id: COMP386, Peso: 1, CH: 72, Requisito: Nenhum, Horario: 36M34
 Periodo: 7, Nome: Nocoes de Direito, Id: COMP387, Peso: 1, CH: 72, Requisito: Nenhum, Horario: 6T1234
-Periodo: 0, Nome: Apredizagem de Máquina, Id: COMP390, Peso: 0, CH: 72, Requisito: COMP404, Horario: 24T56
+Periodo: 0, Nome: Apredizagem de Maquina, Id: COMP390, Peso: 0, CH: 72, Requisito: COMP404, Horario: 24T56
 Periodo: 0, Nome: Sistemas Digitais, Id: COMP391, Peso: 0, CH: 72, Requisito: COMP404, Horario: 7M1234
 Periodo: 0, Nome: Sistemas Distribuidos, Id: COMP392, Peso: 0, CH: 72, Requisito: Nenhum, Horario: 6T1234
 Periodo: 0, Nome: Interacao Homem-Maquina, Id: COMP395, Peso: 0, CH: 72, Requisito: COMP373, Horario: 24T34

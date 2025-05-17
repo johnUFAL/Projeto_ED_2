@@ -1,0 +1,48 @@
+Função (char)	                    Equivalente (wchar_t)	            Descrição
+
+strlen(str)	                        wcslen(str)	                        Tamanho da string
+strcpy(dest, src)	                wcscpy(dest, src)	                Cópia de string
+strcmp(s1, s2)	                    wcscmp(s1, s2)	                    Comparação de strings
+printf("%s", str)	                wprintf(L"%ls", str)	            Impressão de string
+scanf("%s", str)	                wscanf(L"%ls", str)	                Entrada de string
+getchar()                           getwchar()                          Entrada de caractere
+strcspn(* str, * str)               wcschr(* str, * str)                Primeira ocorrência de qualquer caractere 
+strrchr(str, ch)                    wcsrchr(str, ch)	                Retorna um ponteiro para a última ocorrência de ch
+fgets(* str, tam, entrada)          fgetws(* str, tam, entrada)         Entrada de string
+tolower(ch)                         towlower(wchar_t ch)	            Converte um caractere wide para minúsculo
+toupper(ch)                         towupper(wchar_t ch)	            Converte um caractere wide para maiúsculo
+isalpha(ch)                         iswalpha(ch)	                    Verifica se é um caractere alfabético
+isdigit(ch)                         iswdigit(ch)	                    Verifica se é um dígito (0-9)
+isspace(ch)                         iswspace(ch)	                    Verifica se é um espaço em branco
+ispunct(ch)                         iswpunct(ch)	                    Verifica se é um caractere de pontuação
+putc(caractere, stdout)             putwc(caractere, stdout)            Imprimi apenas um caractere
+strtok(* str, * delim)              wcstok(* str, * delim)              Dividi uma string em substrings
+fscanf(FILE * ptr, "%s", str)       fwscanf(FILE * ptr, L"%ls", str)    Lê as informações de um arquivo externo
+fprintf(FILE * ptr, "%d", int)      fprintf(FILE * ptr, L"%d", int)     Imprime as informações no arquivo externo
+fopen("arquivo.txt", "r")           _wfopen(L"arquivo.txt", L"r")       Retorna o endereçamento do arquivo externo para o ponteiro
+fclose(FILE * ptr)                  fclose(FILE * ptr)                  'Fecha' o arquivo o arquivo externo
+
+
+Biblioteca (char)                   Equivalente (wcahr_t)
+
+#include <string.h>                 #include <wchar.h>
+#include <ctype.h>                  #include <wctype.h>
+
+EXPLICAÇÃO
+
+Tabela ASCII
+🔹 Significado: American Standard Code for Information Interchange (Código Padrão Americano para o Intercâmbio de Informações).
+🔹 Tamanho: 7 bits (padrão original), podendo expandir para 8 bits (ASCII estendido).
+🔹 Total de Caracteres: 128 no ASCII original, 256 no ASCII estendido.
+🔹 Abrangência: Caracteres básicos do inglês (letras, números, símbolos e caracteres de controle).
+🔹 Limitação: Não inclui caracteres acentuados nem símbolos de outros idiomas.
+
+ASCII Estendido
+Usa 8 bits e inclui caracteres como ç, á, é, ñ, ü, mas não é padronizado—há variações conforme o sistema operacional.
+
+Tabela Unicode
+🔹 Significado: Um padrão universal para representar caracteres de praticamente todos os idiomas.
+🔹 Tamanho: Pode ter 8, 16 ou 32 bits (UTF-8, UTF-16, UTF-32).
+🔹 Total de Caracteres: Mais de 1.1 milhão de códigos, cobrindo mais de 150 idiomas.
+🔹 Abrangência: Inclui caracteres acentuados, alfabetos asiáticos, emojis e símbolos especiais.
+🔹 Vantagem: Permite representação padronizada de caracteres em diferentes plataformas.

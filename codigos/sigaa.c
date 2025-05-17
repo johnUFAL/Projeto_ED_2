@@ -45,11 +45,12 @@ typedef struct {
 
 typedef struct {
     int carga;
-    int num_disciplinas; //qtd de disciplinas que esta
+    int num_disciplinas; //qtd de disciplinas matriculadas
     int disponibilidade[6][12]; //seis dias e 12 horarios de aula
     wchar_t* nome;
-    wchar_t* formacao;
-    wchar_t** especializacao;
+    wchar_t* mestrado;
+    wchar_t* graduacao;
+    wchar_t* doutorado;
 } Professor;
 
 typedef struct {
@@ -297,8 +298,6 @@ Professor** buscarProfQualif(Professor** professores, int num_prof, Disciplina* 
     return qualificados;
 }
 
-
-
 //adaptado tambem
 //funcao para ofertar as disciplinas com professor (2 funcao principal)
 void ofertarDisc(Curso* curso, wchar_t* semestre_atual) {
@@ -357,7 +356,7 @@ void ofertarDisc(Curso* curso, wchar_t* semestre_atual) {
 void Situacao (int resto[], Aluno* aluno) {//essa função descreve os critérios estabelecidos pela professora{
     wprintf(L"=============================CRITÉRIOS=============================\n");
     
-    wprintf(L"-> Máximo de disciplinas por semestre será de ");
+    wprintf(L"-> Máximo de disciplinas do professor por semestre será de ");
     
     switch (resto[0]){
         case 0: wprintf(L"3 disciplinas\n"); break;
@@ -381,11 +380,11 @@ void Situacao (int resto[], Aluno* aluno) {//essa função descreve os critério
     wprintf(L"-> O critério de alocação de professoress será: ");
 
     switch (resto[2]) {
-        case 0: wprintf(L"Os professores deve ser alocados no menor números de dias possíveis\n");
+        case 0: wprintf(L"Os professores devem ser alocados no menor números de dias possíveis\n");
             break;
-        case 1: wprintf(L"Os professores deve ser alocados no menor números de dias possíveis\n");    
+        case 1: wprintf(L"Os professores devem ser alocados no menor números de dias possíveis\n");    
             break;
-        case 2: wprintf(L"Os professores deve ser alocados de modo a ir ao IC todos os dias\n");
+        case 2: wprintf(L"Os professores devem ser alocados de modo a ir ao IC todos os dias\n");
             break;
         default: wprintf(L"#\nERRO! Valor fora do intervalo esperado!\n");
     }
@@ -393,7 +392,7 @@ void Situacao (int resto[], Aluno* aluno) {//essa função descreve os critério
     wprintf(L"-> A oferta das disciplinas se dará: ");
 
     switch (resto[3]) { 
-        case 0: wprintf(L"As disciplinas com pré requisitos tem maior prioridade\n");
+        case 0: wprintf(L"As disciplinas com pré requisitos têm maior prioridade\n");
             break;
         case 1: wprintf(L"As disciplinas obrigatórias devem ter maior prioridade\n");    
             break;
@@ -412,14 +411,16 @@ void carregarDisc(const char* nome_arq, Disciplina*** disciplinas, int* cont) {
         exit(1);
     }
 
-    wchar_t linha[1000]; //SE TIVER MAIS MUDA AQUI!!!!!!!
+    wchar_t linha[200]; //SE TIVER MAIS MUDA AQUI!!!!!!! <- quantidade de caracteres por linha
     *cont = 0;
     while (fgetws(linha, sizeof(linha)/sizeof(wchar_t), file)) {
-        if (wcsstr(linha, L"Periodo:")) (*cont)++;
+        if (wcsstr(linha, L"Periodo:")) (*cont)++; //vai contabilizar quantas linhas tem no arquivo
     }
-    rewind(file);
+
+    rewind(file); //retorna o ponteiro para o inicio do arquivo
 
     *disciplinas = (Disciplina**)malloc(*cont * sizeof(Disciplina*));
+
     if (!*disciplinas) {
         perror("Erro ao alocar disciplinas");
         fclose(file);
@@ -429,20 +430,31 @@ void carregarDisc(const char* nome_arq, Disciplina*** disciplinas, int* cont) {
     int i = 0;
     while (fgetws(linha, sizeof(linha)/sizeof(wchar_t), file)) {
         if (wcsstr(linha, L"Periodo:")) {
-            Disciplina* d = (Disciplina*)malloc(sizeof(Disciplina));
+            Disciplina* d = (Disciplina*)malloc(sizeof(Disciplina)); //ponteiro auxiliar
             
             d->nome = (wchar_t*)malloc(100 * sizeof(wchar_t));
             d->id = (wchar_t*)malloc(10 * sizeof(wchar_t));
             d->horario = (wchar_t*)malloc(20 * sizeof(wchar_t));
             d->requisitos = (wchar_t**)malloc(5 * sizeof(wchar_t*));
             
-            wchar_t* svptr;
-            wchar_t* tk = wcstok(linha, L",", &svptr);
+            /*Periodo: 2, Nome: Banco de dados, Id: COMP365, Peso: 1, CH: 72, Requisito: Nenhum, Horario: 24T34
+            tokens exemplo
+            Periodo: 2
+             Nome: Banco de dados 
+             Id: COMP365
+             Peso: 1 
+             CH: 72
+             Requisito: Nenhum
+             Horario: 24T34
+            */
+            wchar_t* svptr; //guarda a ultima posicao do token, necessário para sistemas linux
+            wchar_t* tk = wcstok(linha, L",", &svptr); //ponteiro para os tokens
             while (tk != NULL) {
                 if (wcsstr(tk, L"Periodo:")) {
-                    swscanf(tk, L"Periodo: %d", &d->periodo);
+                    swscanf(tk, L"Periodo: %d", &d->periodo); //swscanf lê de uma string wide as informações desejadas
                 } else if (wcsstr(tk, L" Nome:")) {
-                    wchar_t* play = wcsstr(tk, L":") + 1;
+                    wchar_t* play = wcsstr(tk, L":") + 1; //wcsstr retorna posição do ':' e em seguida pula mais uma posição
+                    //indo para o espaço vazio anterior a palavra desejada
                     wcscpy(d->nome, play);
                 } else if (wcsstr(tk, L" Id:")) {
                     wchar_t* play = wcsstr(tk, L":") + 1;
@@ -461,14 +473,18 @@ void carregarDisc(const char* nome_arq, Disciplina*** disciplinas, int* cont) {
                 tk = wcstok(NULL, L",", &svptr);
             }
             
-            d->tipo = (d->periodo == 0) ? 1 : 0;
-            d->lab = (wcsstr(d->nome, L"Programação") != NULL) ? 1 : 0;
+            d->tipo = (d->periodo == 0) ? 1 : 0; //eletiva ou não
+            d->lab = (wcsstr(d->nome, L"Programacao") != NULL) ? 1 : 0; //precisa de lab
             
             (*disciplinas)[i++] = d;
         }
     }
+
+    (*disciplinas)[i] = NULL;
+
     fclose(file);
 }
+
 int contarDiasAlocados(Professor* prof, Curso* curso, wchar_t* semestre_atual) {
     int diasAlocados[6] = {0};
     for (int i = 0; i < curso->qtd_ofertas; i++) {
@@ -492,14 +508,16 @@ void carregarProf(const char* nome_arq, Professor*** professores, int* cont) {
         exit(1);
     }
 
-    wchar_t linha[500];
-    *cont = 0;
+    wchar_t linha[300]; //estimativa do máximo de caracteres por linha
+    *cont = 0; //contador de linhas
     while (fgetws(linha, sizeof(linha)/sizeof(wchar_t), file)) {
         if (wcsstr(linha, L"Nome:")) (*cont)++;
     }
-    rewind(file);
 
-    *professores = (Professor**)malloc(*cont * sizeof(Professor*));
+    rewind(file); //retorne ao macaco, digo, retorne ao inicio
+
+    *professores = (Professor**)malloc(*cont * sizeof(Professor*)); //vai alocar memória para o ponteiro de ponteiro, criando nossa matriz
+
     if (!*professores) {
         perror("Erro ao alocar professores");
         fclose(file);
@@ -509,12 +527,15 @@ void carregarProf(const char* nome_arq, Professor*** professores, int* cont) {
     int i = 0;
     while (fgetws(linha, sizeof(linha)/sizeof(wchar_t), file)) {
         if (wcsstr(linha, L"Nome:")) {
-            Professor* p = (Professor*)malloc(sizeof(Professor));
+            Professor* p = (Professor*)malloc(sizeof(Professor)); //ponteiro auxiliar
             
-            p->nome = (wchar_t*)malloc(100 * sizeof(wchar_t));
-            p->formacao = (wchar_t*)malloc(500 * sizeof(wchar_t));
-            p->especializacao = (wchar_t**)malloc(10 * sizeof(wchar_t*));
+            //foi feita uma estimativa para otimizar o uso de memória
+            p->nome = (wchar_t*)malloc(55 * sizeof(wchar_t));
+            p->graduacao = (wchar_t*)malloc(35 * sizeof(wchar_t));
+            p->mestrado = (wchar_t*)malloc(40 * sizeof(wchar_t));
+            p->doutorado = (wchar_t*)malloc(50 * sizeof(wchar_t));
             
+            //preechendo toda a matriz com 1, ou seja, disponivel
             for (int d = 0; d < 6; d++) {
                 for (int h = 0; h < 12; h++) {
                     p->disponibilidade[d][h] = 1;
@@ -522,19 +543,22 @@ void carregarProf(const char* nome_arq, Professor*** professores, int* cont) {
             }
             
             wchar_t* svptr;
-            wchar_t* tk = wcstok(linha, L",", &svptr);
+            wchar_t* tk = wcstok(linha, L",", &svptr); //guarda a ultima posicao do token, necessário para sistemas linux
+            //Nome: Leonardo Viana Pereira, CH: 40, Graduação: Fisica, Mestrado: Fisica, Doutorado: Fisica
             while (tk != NULL) {
                 if (wcsstr(tk, L"Nome:")) {
                     wchar_t* play = wcsstr(tk, L":") + 1; 
                     while (*play == L' ') play++;
                     wcscpy(p->nome, play);
-                } else if (wcsstr(tk, L" Formação:")) {
+                } else if (wcsstr(tk, L" CH:")) {
+                    swscanf(tk, L" CH: %d", &p->carga);
+                } else if (wcsstr(tk, L" Graduação:")) {
                     wchar_t* play = wcsstr(tk, L":") + 1;
                     while (*play == L' ') play++;
-                    wcscpy(p->formacao, play);
+                    wcscpy(p->graduacao, play);
                     
-                    wchar_t* esp_saveptr;
-                    wchar_t* esp_token = wcstok(p->formacao, L",", &esp_saveptr);
+                    /*wchar_t* esp_saveptr;
+                    wchar_t* esp_token = wcstok(p->graduacao, L",", &esp_saveptr);
                     int esp_count = 0;
                     while (esp_token != NULL && esp_count < 10) {
                         p->especializacao[esp_count] = (wchar_t*)malloc(100 * sizeof(wchar_t));
@@ -542,16 +566,28 @@ void carregarProf(const char* nome_arq, Professor*** professores, int* cont) {
                         esp_count++;
                         esp_token = wcstok(NULL, L",", &esp_saveptr);
                     }
-                    p->especializacao[esp_count] = NULL;
+                    p->especializacao[esp_count] = NULL;*/
+                } else if (wcsstr(tk, L" Mestrado:")) {
+                    wchar_t *play = wcsstr(tk, L":") + 1;
+                    while (*play == L' ') play++;
+                    wcscpy(p->mestrado, play);
                 }
+                else if (wcsstr(tk, L" Doutorado:")) {
+                    wchar_t *play = wcsstr(tk, L":") + 1;
+                    while (*play == L' ') play++;
+                    wcscpy(p->doutorado, play);
+                }
+
                 tk = wcstok(NULL, L",", &svptr);
             }
 
-            p->carga = 0;
             p->num_disciplinas = 0;
             (*professores)[i++] = p;
         }
     }
+
+    (*professores)[i] = NULL;
+
     fclose(file);
 }
 
@@ -562,7 +598,7 @@ void carregarAluno(const char* nome_arq, Aluno*** alunos, int* cont) {
         exit(1);
     }
 
-    wchar_t linha[1000];
+    wchar_t linha[200];
     *cont = 0;
     while (fgetws(linha, sizeof(linha)/sizeof(wchar_t), file)) {
         if (wcsstr(linha, L"Nome:")) (*cont)++;
@@ -576,7 +612,7 @@ void carregarAluno(const char* nome_arq, Aluno*** alunos, int* cont) {
         exit(1);
     }
 
-    int i = 0;
+    int i = 0, j = 0, k = 0;
     Aluno* atual_al = NULL;
     while (fgetws(linha, sizeof(linha)/sizeof(wchar_t), file)) {
         if (wcsstr(linha, L"Nome:")) {
@@ -586,10 +622,14 @@ void carregarAluno(const char* nome_arq, Aluno*** alunos, int* cont) {
             
             atual_al = (Aluno*)malloc(sizeof(Aluno));
             atual_al->nome = (wchar_t*)malloc(100 * sizeof(wchar_t));
-            atual_al->disciplinas_feitas = (wchar_t**)malloc(50 * sizeof(wchar_t*));
-            atual_al->disciplinas_falta = (wchar_t**)malloc(50 * sizeof(wchar_t*));
+            atual_al->disciplinas_feitas = (wchar_t**)malloc(50 * sizeof(wchar_t*)); //50 é a estimativa da quantidade de disciplinas
+            atual_al->disciplinas_falta = (wchar_t**)malloc(50 * sizeof(wchar_t*)); //ou seja, um ponteiro de ponteiro para o 1° de 50 ponteiros wchar
             
-            wchar_t* svptr;
+            /*Nome: Ana Beatriz Santos Lima, Periodo: 6
+            Id: COMP387, Nome: Nocoes de Direito, Nota: 9.8
+            Id: COMP401, Nome: Ciencia de Dados, Nota: 8.0*/
+
+            wchar_t* svptr; //guarda a ultima posicao do token, necessário para sistemas linux
             wchar_t* tk = wcstok(linha, L",", &svptr);
             while (tk != NULL) {
                 if (wcsstr(tk, L"Nome:")) {
@@ -602,37 +642,39 @@ void carregarAluno(const char* nome_arq, Aluno*** alunos, int* cont) {
                 tk = wcstok(NULL, L",", &svptr);
             }
             
-            atual_al->disciplinas_feitas[0] = NULL;
+            atual_al->disciplinas_feitas[0] = NULL; //iniciando para o novo aluno
             atual_al->disciplinas_falta[0] = NULL;
+            j = 0; //indice que ajudará na distribuição das disciplinas pagas
+            k = 0; //indice para as disciplinas não pagas, ou perdidas
         } 
         else if (wcsstr(linha, L"Id:")) {
-            wchar_t id[20], nome[100];
+            wchar_t id[20], nome[65];
             float nota;
             
-            swscanf(linha, L"Id: %19[^,], Nome: %99[^,], Nota: %f", id, nome, &nota);
+            swscanf(linha, L"Id: %19[^,], Nome: %64[^,], Nota: %f", id, nome, &nota);
             
-            if (nota >= 5.0) {
-                int j = 0;
-                while (atual_al->disciplinas_feitas[j] != NULL) j++;
+            if (nota >= 7.0) {
+                while (atual_al->disciplinas_feitas[j] != NULL) j++; //caminha até chegar ao final do ponteiro e a parti daí vai ser anexado um id
                 atual_al->disciplinas_feitas[j] = (wchar_t*)malloc(20 * sizeof(wchar_t));
                 wcscpy(atual_al->disciplinas_feitas[j], id);
-                atual_al->disciplinas_feitas[j+1] = NULL;
+                atual_al->disciplinas_feitas[j+1] = NULL; //ajuda a finalizar a leitura 
             } else {
-                int j = 0;
-                while (atual_al->disciplinas_falta[j] != NULL) j++;
-                atual_al->disciplinas_falta[j] = (wchar_t*)malloc(20 * sizeof(wchar_t));
-                wcscpy(atual_al->disciplinas_falta[j], id);
-                atual_al->disciplinas_falta[j+1] = NULL;
+                while (atual_al->disciplinas_falta[k] != NULL) k++;
+                atual_al->disciplinas_falta[k] = (wchar_t*)malloc(20 * sizeof(wchar_t));
+                wcscpy(atual_al->disciplinas_falta[k], id);
+                atual_al->disciplinas_falta[k+1] = NULL; //ajuda a finalizar a leitura 
             }
         }
     }
     
     if (atual_al != NULL) {
         (*alunos)[i++] = atual_al;
+        (*alunos)[i] = NULL;
     }
     
     fclose(file);
 }
+
 void freeDisciplinas(Disciplina* d) {
     if (!d) return;
     if (d->nome) free(d->nome);
@@ -957,12 +999,12 @@ int main() {
         return 1;
     }
 
-    curso->nome = malloc(100 * sizeof(wchar_t));
+    curso->nome = malloc(30 * sizeof(wchar_t));
     wcscpy(curso->nome, L"Ciência da Computação");
 
     // Carrega dados dos arquivos
-    carregarDisc("disciplinas.txt", &curso->disciplinas, &curso->qtd_disciplinas);
-    carregarProf("professores.txt", &curso->professores, &curso->qtd_prof);
+    carregarDisc("disciplinas.txt", &curso->disciplinas, &curso->qtd_disciplinas); //Disciplina** disciplinas
+    carregarProf("professores.txt", &curso->professores, &curso->qtd_prof); //Professor** professores
     carregarAluno("alunos.txt", &curso->alunos, &curso->qtd_alunos);
 
     // Inicializa ponteiros e contadores
@@ -979,7 +1021,7 @@ int main() {
     wprintf(L"Alunos: %d\n", curso->qtd_alunos);
 
     // Processa oferta de disciplinas
-    ofertarDisc(curso, L"2025.1");
+    //ofertarDisc(curso, L"2025.1");
 
     // Liberação de memória
     freeCurso(curso);  // Esta função deve liberar tudo que estiver dentro de `curso`
