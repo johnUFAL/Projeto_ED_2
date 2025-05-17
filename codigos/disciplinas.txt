@@ -1,4 +1,4 @@
-Periodo: 1, Nome: Programacao 1, Id: COMP359, Peso: 1, CH: 72, Requisito: Nenhum, Horario: 6M3456, 
+Periodo: 1, Nome: Programacao 1, Id: COMP359, Peso: 1, CH: 72, Requisito: Nenhum, Horario: 6M3456
 Periodo: 1, Nome: Logica para Computacao, Id: COMP360, Peso: 1, CH: 72, Requisito: Nenhum, Horario: 24M34
 Periodo: 1, Nome: Computacao Sociedade e Etica, Id: COMP361, Peso: 1, CH: 72, Requisito: Nenhum, Horario: 24M56
 Periodo: 1, Nome: Matematica Discreta, Id: COMP362, Peso: 1, CH: 72, Requisito: Nenhum, Horario: 24M12

@@ -25,32 +25,32 @@
 #endif
 
 #define MAXR 4 //n° max de restos
-#define PRAZO_MAX 12 //o maximo de peridos para qualquer aluno é 12
-#define MAX_DISC 3 //de acordo com o nome esse é o maximo de disciplina
-#define MAX_REQUISITOS 10 //o máximo de requisitos por disciplin
+#define PRAZO_MAX 12 //o maximo de periodos para qualquer aluno é 12
+#define MAX_DISC 3 //de acordo com o nome esse é o maximo de disciplinas
+#define MAX_REQUISITOS 10 //o máximo de requisitos por disciplina
 
 //char* armazena um nome (uma string)
 //char** armazena muitas strings (um array de string)
 
 typedef struct {
-    wchar_t* nome;
-    wchar_t* id;
-    int carga;
+    int lab; //caso precise de laboratorio
     int peso;
-    int periodo; //no caso da eletiva 0
-    int tipo; //0 para obirgatoria, 1 para eletiva
-    int lab; //caso precise de laboratoria
+    int tipo; //0 para obrigatoria, 1 para eletiva
+    int carga;
+    int periodo; //no caso das eletivas é 0
+    wchar_t* id;
+    wchar_t* nome;
     wchar_t* horario;
     wchar_t** requisitos;
 } Disciplina;
 
 typedef struct {
-    wchar_t* nome;
-    wchar_t* formacao;
     int carga;
     int num_disciplinas; //qtd de disciplinas que esta
-    wchar_t** especializacao;
     int disponibilidade[6][12]; //seis dias e 12 horarios de aula
+    wchar_t* nome;
+    wchar_t* formacao;
+    wchar_t** especializacao;
 } Professor;
 
 typedef struct {
