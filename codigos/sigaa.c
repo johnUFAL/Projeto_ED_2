@@ -33,8 +33,6 @@
 
 typedef struct {
     int lab; //caso precise de laboratorio
-    int peso;
-    int tipo; //0 para obrigatoria, 1 para eletiva
     int carga;
     int periodo; //no caso das eletivas é 0
     wchar_t* id;
@@ -103,20 +101,17 @@ int comparar_periodo_e_obrigatoriedade(const void* a, const void* b) {
     Disciplina* d1 = *(Disciplina**)a;
     Disciplina* d2 = *(Disciplina**)b;
 
-    // Período 0 sempre vai para o final
-    if (d1->periodo == 0 && d2->periodo != 0) return 1;
-    if (d1->periodo != 0 && d2->periodo == 0) return -1;
+    //Ordenação entre uma obrigatória e eletiva
+    //(trás) >>> (frente)
+    if (d1->periodo == 0 && d2->periodo != 0) return 1; //d1 avança uma posição, ou última posição
+    if (d1->periodo != 0 && d2->periodo == 0) return -1; //d1 volta uma posição, ou primeira posição
 
-    // Ordena por período crescente
+    //Ordenação entre matérias obrigatórias
     if (d1->periodo != d2->periodo)
-        return d1->periodo - d2->periodo;
+        return d1->periodo - d2->periodo; //d1 pode avançar ou voltar x (d1->periodo - d2->periodo) posições 
 
-    // Prioriza obrigatórias (tipo 0) sobre eletivas (tipo 1)
-    if (d1->tipo != d2->tipo)
-        return d1->tipo - d2->tipo;
-
-    // Desempate por ordem alfabética (nome da disciplina)
-    return wcscmp(d1->nome, d2->nome);
+    //Ordenação entre disciplinas eletivas por ordem alfabética
+    return wcscmp(d1->nome, d2->nome); //0 é igual, 1 d1 é maior, ou vem depois, -1 d1 é menor, ou vem antes
 }
 
 //criacao de salas
@@ -300,9 +295,10 @@ Professor** buscarProfQualif(Professor** professores, int num_prof, Disciplina* 
 
 //adaptado tambem
 //funcao para ofertar as disciplinas com professor (2 funcao principal)
-void ofertarDisc(Curso* curso, wchar_t* semestre_atual) {
+void ofertarDisc(Curso* curso, const wchar_t* semestre_atual) {
     // Ordena disciplinas por período e obrigatoriedade
     qsort(curso->disciplinas, curso->qtd_disciplinas, sizeof(Disciplina*), comparar_periodo_e_obrigatoriedade);
+    //ponteiro para o array que será ordenado, qtd de elementos, tam de cada elemento, função que compara dois elementos
 
     for (int i = 0; i < curso->qtd_disciplinas; i++) {
         Disciplina* disc = curso->disciplinas[i];
@@ -434,15 +430,14 @@ void carregarDisc(const char* nome_arq, Disciplina*** disciplinas, int* cont) {
             
             d->nome = (wchar_t*)malloc(100 * sizeof(wchar_t));
             d->id = (wchar_t*)malloc(10 * sizeof(wchar_t));
-            d->horario = (wchar_t*)malloc(20 * sizeof(wchar_t));
-            d->requisitos = (wchar_t**)malloc(5 * sizeof(wchar_t*));
+            d->horario = (wchar_t*)malloc(10 * sizeof(wchar_t));
+            d->requisitos = (wchar_t**)malloc(25 * sizeof(wchar_t*));
             
-            /*Periodo: 2, Nome: Banco de dados, Id: COMP365, Peso: 1, CH: 72, Requisito: Nenhum, Horario: 24T34
+            /*Periodo: 2, Nome: Banco de dados, Id: COMP365, CH: 72, Requisito: Nenhum, Horario: 24T34
             tokens exemplo
             Periodo: 2
              Nome: Banco de dados 
              Id: COMP365
-             Peso: 1 
              CH: 72
              Requisito: Nenhum
              Horario: 24T34
@@ -454,26 +449,28 @@ void carregarDisc(const char* nome_arq, Disciplina*** disciplinas, int* cont) {
                     swscanf(tk, L"Periodo: %d", &d->periodo); //swscanf lê de uma string wide as informações desejadas
                 } else if (wcsstr(tk, L" Nome:")) {
                     wchar_t* play = wcsstr(tk, L":") + 1; //wcsstr retorna posição do ':' e em seguida pula mais uma posição
+                    while (*play == L' ') play++;
                     //indo para o espaço vazio anterior a palavra desejada
                     wcscpy(d->nome, play);
                 } else if (wcsstr(tk, L" Id:")) {
                     wchar_t* play = wcsstr(tk, L":") + 1;
+                    while (*play == L' ') play++;
                     wcscpy(d->id, play);
-                } else if (wcsstr(tk, L" Peso:")) {
-                    swscanf(tk, L" Peso: %d", &d->peso);
                 } else if (wcsstr(tk, L" CH:")) {
                     swscanf(tk, L" CH: %d", &d->carga);
                 } else if (wcsstr(tk, L" Requisito:")) {
                     wchar_t* play = wcsstr(tk, L":") + 1;
-                    // Processar requisitos
+                    while (*play == L' ') play++;
+                    wcscpy(d->requisitos, play);
                 } else if (wcsstr(tk, L" Horario:")) {
                     wchar_t* play = wcsstr(tk, L":") + 1;
+                    while (*play == L' ') play++;
                     wcscpy(d->horario, play);
                 }
+
                 tk = wcstok(NULL, L",", &svptr);
             }
             
-            d->tipo = (d->periodo == 0) ? 1 : 0; //eletiva ou não
             d->lab = (wcsstr(d->nome, L"Programacao") != NULL) ? 1 : 0; //precisa de lab
             
             (*disciplinas)[i++] = d;
@@ -1005,10 +1002,10 @@ int main() {
     // Carrega dados dos arquivos
     carregarDisc("disciplinas.txt", &curso->disciplinas, &curso->qtd_disciplinas); //Disciplina** disciplinas
     carregarProf("professores.txt", &curso->professores, &curso->qtd_prof); //Professor** professores
-    carregarAluno("alunos.txt", &curso->alunos, &curso->qtd_alunos);
+    carregarAluno("alunos.txt", &curso->alunos, &curso->qtd_alunos); //Aluno** aluno
 
     // Inicializa ponteiros e contadores
-    curso->ofertas = malloc(sizeof(Oferta*) * curso->qtd_disciplinas); // Garantir espaço
+    curso->ofertas = (Oferta**)malloc(curso->qtd_disciplinas * sizeof(Oferta*)); // Garantir espaço
     curso->qtd_ofertas = 0;
 
     curso->salas = NULL;
@@ -1016,9 +1013,9 @@ int main() {
 
     // Informações do curso
     wprintf(L"Curso: %ls\n", curso->nome);
-    wprintf(L"Disciplinas: %d\n", curso->qtd_disciplinas);
-    wprintf(L"Professores: %d\n", curso->qtd_prof);
-    wprintf(L"Alunos: %d\n", curso->qtd_alunos);
+    wprintf(L"Quantidade de disciplinas: %d\n", curso->qtd_disciplinas);
+    wprintf(L"Quantidade de professores: %d\n", curso->qtd_prof);
+    wprintf(L"Quantidade de alunos: %d\n", curso->qtd_alunos);
 
     // Processa oferta de disciplinas
     //ofertarDisc(curso, L"2025.1");
