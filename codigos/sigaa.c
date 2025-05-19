@@ -97,7 +97,7 @@ int extrairDia(wchar_t* horario) {
     return horario[0] - L'0'; 
 }
 
-int comparar_periodo_e_obrigatoriedade(const void* a, const void* b) {
+int comparar_periodo_e_obrigatoriedade(const void* a, const void* b) { //const pois não queremos alterar o valor de cada disciplina, apenas ler
     Disciplina* d1 = *(Disciplina**)a;
     Disciplina* d2 = *(Disciplina**)b;
 
@@ -176,54 +176,64 @@ int marcarHorario(Sala* S, int dia, int aula) {
     return 1;
 }
 
-//desicao das ofertas de disciplinas
+//decisao das ofertas de disciplinas
 int decisaoOfertaDisc(Disciplina* disciplina, Aluno** alunos, int num_alunos, int periodoMax) {
-    //contar quantos alunos podem cursar tal disci
-    int interessados = 0;  //querem fazer a disc
-    int no_prazo = 0; //estao no prazo do curso
+    //variáveis para contabilizar quantos alunos podem cursar tal disciplina
+    int interessados = 0;  //querem fazer a disciplina
+    int no_prazo = 0; //estao no prazo limite do curso
 
     for (int i = 0; i < num_alunos; i++) {
-        int feita = 0; //se ja fex a materia
-        for (int j = 0; alunos[i]->disciplinas_feitas[j] != NULL; j++) {
-            if (wcscmp(alunos[i]->disciplinas_feitas[j], disciplina->id) == 0) {
+        int feita = 0; //se já pagou a disciplina
+        for (int j = 0; alunos[i]->disciplinas_feitas[j] != NULL; j++) { //vai analisar todas as disciplinas pagas pelo aluno i
+            if (wcscmp(alunos[i]->disciplinas_feitas[j], disciplina->id) == 0) { //se der igual quer dizer que este aluno já pagou essa matéria
                 feita = 1;
                 break;
             }
         }
-        if (feita) continue;
 
-        //prerequisito
-        int tem_pre = 1;
-        for (int k = 0; disciplina->requisitos[k] != NULL; k++) {
-            int legal = 0; //se tem pres
-            for (int l = 0; alunos[i]->disciplinas_feitas[l] != NULL; l++) {
-                if (wcscmp(alunos[i]->disciplinas_feitas[l], disciplina->requisitos[k]) == 0) {
-                    legal = 1;
+        if (feita) continue; //pula para o próximo aluno
+
+        //pre requisito, caso o aluno ainda não tenha pagado essa disciplina
+        int matricular = 1; //vai ser o resultado final após a checagem dos x pre requisitos, 1 - pode se matricular, 0 - não pode se matricular  
+        if (wcscmp(disciplina->requisitos, "NULL") != 0) //tem pre requisitos
+        {
+            for (int k = 0; disciplina->requisitos[k] != NULL; k++) { //vai caminhando por todos os pre requisitos da disciplina
+                int permitido = 0; //vai dizer se ele cumpre com todos os pre requisitos
+                
+                for (int l = 0; alunos[i]->disciplinas_feitas[l] != NULL; l++) { //vai caminhando por todos as disciplinas pagas pelo aluno, para ver se ele pode pagar esta
+                    if (wcscmp(alunos[i]->disciplinas_feitas[l], disciplina->requisitos[k]) == 0) {
+                        permitido = 1;
+                        break;
+                    }
+                }
+
+                if (!permitido) { //para caso o loop das disciplinas que ele tenha pago tenha sido terminado e não tenha sido
+                    //encontrado a correspondente com um dos pre requisitos
+                    matricular = 0; //não poderá se matricular
                     break;
                 }
             }
-
-            if (!legal) {
-                tem_pre = 0;
-                break;
-            }
         }
 
-        if (tem_pre) {
+        if (matricular) { //pode se matricular
             interessados++;
-            if (alunos[i]->periodo <= periodoMax) { //verifica perido
+            if (alunos[i]->periodo == periodoMax) { //caso o aluno esteja no periodo máximo do curso e esteja matriculado na disciplina
+                //é obrigátório que esta seja ofertada
                 no_prazo++;
             }
         }
     }
 
-    //nnoa ofertamento
+    //não ofertamento
     if (interessados == 0) return 0;
-    if(interessados < 10 && no_prazo == 0) return wprintf(L"Sem alunos minimos ou aluno no prazo do curso para ofertar\n");
+    if(interessados < 10 && no_prazo == 0) {
+        wprintf(L"Sem alunos minimos ou aluno no prazo máximo do curso! Não será possivel oferta-la\n");
+        return 0;
+    }
 
     return 1; // verdadeiro
-  
 }
+
 //essa função tem o objetivo de encontrar um bloco contínuo de horários disponíveis na agenda de um professor
 //é aqui que vamos garantir que ele seja alocado no menor numero de dias possiveis
 void buscarBlocoHorarioDisponivel(Professor* prof, int carga, int* dia_out, int* hora_out) {
@@ -255,6 +265,64 @@ void marcarHorarioProfessor(Professor* prof, int dia, int hora_inicio, int carga
     }
 }
 
+int professorApto(Disciplina* disciplina, Professor* professores) {
+    if (wcsstr(disciplina->nome, L"Direito") && (wcsstr(professores->doutorado, L"Direito") || wcsstr(professores->mestrado, L"Direito"))) {
+        return 1;
+    } else if (wcsstr(disciplina->nome, L"Programacao") && (wcsstr(professores->doutorado, L"Ciencia da Computacao") || wcsstr(professores->mestrado, L"Ciencia da Computacao") || wcsstr(professores->doutorado, L"Informatica") || wcsstr(professores->mestrado, L"Informatica"))) {
+        return 1;
+    } else if (wcsstr(disciplina->nome, L"Algoritmos") && (wcsstr(professores->doutorado, L"Ciencia da Computacao") || wcsstr(professores->mestrado, L"Ciencia da Computacao") || wcsstr(professores->doutorado, L"Matematica") || wcsstr(professores->mestrado, L"Matematica"))) {
+        return 1;
+    }  else if (wcsstr(disciplina->nome, L"Teoria") && (wcsstr(professores->doutorado, L"Ciencia da Computacao") || wcsstr(professores->mestrado, L"Ciencia da Computacao") || wcsstr(professores->doutorado, L"Matematica") || wcsstr(professores->mestrado, L"Matematica"))) {
+        return 1;
+    }  else if (wcsstr(disciplina->nome, L"Operacionais") && (wcsstr(professores->doutorado, L"Ciencia da Computacao") || wcsstr(professores->mestrado, L"Ciencia da Computacao") || wcsstr(professores->doutorado, L"Sistemas") || wcsstr(professores->mestrado, L"Sistemas"))) {
+        return 1;
+    }  else if (wcsstr(disciplina->nome, L"Compiladores") && (wcsstr(professores->doutorado, L"Ciencia da Computacao") || wcsstr(professores->mestrado, L"Ciencia da Computacao") || wcsstr(professores->doutorado, L"Informatica") || wcsstr(professores->mestrado, L"Informatica") || wcsstr(professores->doutorado, L"Sistemas") || wcsstr(professores->mestrado, L"Sistemas"))) {
+        return 1;
+    }  else if (wcsstr(disciplina->nome, L"Artificial") && (wcsstr(professores->doutorado, L"Ciencia da Computacao") || wcsstr(professores->mestrado, L"Ciencia da Computacao") || wcsstr(professores->doutorado, L"Informatica") || wcsstr(professores->mestrado, L"Informatica") || wcsstr(professores->doutorado, L"Conhecimento") || wcsstr(professores->mestrado, L"Conhecimento"))) {
+        return 1;
+    } else if (wcsstr(disciplina->nome, L"Grafica") && (wcsstr(professores->doutorado, L"Ciencia da Computacao") || wcsstr(professores->mestrado, L"Ciencia da Computacao") || wcsstr(professores->doutorado, L"Informatica") || wcsstr(professores->mestrado, L"Informatica") || wcsstr(professores->doutorado, L"Sistemas") || wcsstr(professores->mestrado, L"Sistemas"))) {
+        return 1;
+    } else if (wcsstr(disciplina->nome, L"Desenvolvimento") && (wcsstr(professores->doutorado, L"Engenharia") || wcsstr(professores->mestrado, L"Engenharia") || wcsstr(professores->doutorado, L"Sistemas") || wcsstr(professores->mestrado, L"Sistemas"))) {
+        return 1;
+    } else if (wcsstr(disciplina->nome, L"Metodologias") && (wcsstr(professores->doutorado, L"Administracao") || wcsstr(professores->mestrado, L"Administracao") || wcsstr(professores->doutorado, L"Producao") || wcsstr(professores->mestrado, L"Producao"))) {
+        return 1;
+    } else if (wcsstr(disciplina->nome, L"Apredizagem") && (wcsstr(professores->doutorado, L"Ciencia da Computacao") || wcsstr(professores->mestrado, L"Ciencia da Computacao") || wcsstr(professores->doutorado, L"Computacional") || wcsstr(professores->mestrado, L"Computacional"))) {
+        return 1;
+    } else if (wcsstr(disciplina->nome, L"Digitais") && (wcsstr(professores->doutorado, L"Eletrica") || wcsstr(professores->mestrado, L"Eletrica") || wcsstr(professores->doutorado, L"Engenharia da Computacao") || wcsstr(professores->mestrado, L"Engenharia da Computacao"))) {
+        return 1;
+    } else if (wcsstr(disciplina->nome, L"Distribuidos") && (wcsstr(professores->doutorado, L"Computacao") || wcsstr(professores->mestrado, L"Computacao") || wcsstr(professores->doutorado, L"Sistemas") || wcsstr(professores->mestrado, L"Sistemas"))) {
+        return 1;
+    } else if (wcsstr(disciplina->nome, L"Interacao") && (wcsstr(professores->doutorado, L"Computacao") || wcsstr(professores->mestrado, L"Computacao") || wcsstr(professores->doutorado, L"Informatica") || wcsstr(professores->mestrado, L"Informatica") || wcsstr(professores->doutorado, L"Sistemas") || wcsstr(professores->mestrado, L"Sistemas"))) {
+        return 1;
+    } else if (wcsstr(disciplina->nome, L"Evolucionaria") && (wcsstr(professores->doutorado, L"Ciencia da Computacao") || wcsstr(professores->mestrado, L"Ciencia da Computacao") || wcsstr(professores->doutorado, L"Conhecimento") || wcsstr(professores->mestrado, L"Conhecimento"))) {
+        return 1;
+    } else if (wcsstr(disciplina->nome, L"Embarcados") && (wcsstr(professores->doutorado, L"Eletrica") || wcsstr(professores->mestrado, L"Eletrica") || wcsstr(professores->doutorado, L"Engenharia da Computacao") || wcsstr(professores->mestrado, L"Engenharia da Computacao"))) {
+        return 1;
+    } else if (wcsstr(disciplina->nome, L"Gerencia") && (wcsstr(professores->doutorado, L"Administracao") || wcsstr(professores->mestrado, L"Administracao") || wcsstr(professores->doutorado, L"Producao") || wcsstr(professores->mestrado, L"Producao"))) {
+        return 1;
+    } else if (wcsstr(disciplina->nome, L"Conceitos") && (wcsstr(professores->doutorado, L"Ciencia da Computacao") || wcsstr(professores->mestrado, L"Ciencia da Computacao") || wcsstr(professores->doutorado, L"Informatica") || wcsstr(professores->mestrado, L"Informatica") || wcsstr(professores->doutorado, L"Sistemas") || wcsstr(professores->mestrado, L"Sistemas"))) {
+        return 1;
+    } else if (wcsstr(disciplina->nome, L"Dados") && (wcsstr(professores->doutorado, L"Ciencia da Computacao") || wcsstr(professores->mestrado, L"Ciencia da Computacao") || wcsstr(professores->doutorado, L"Matematica") || wcsstr(professores->mestrado, L"Matematica"))) {
+        return 1;
+    } else if (wcsstr(disciplina->nome, L"Microcontroladores") && (wcsstr(professores->doutorado, L"Eletrica") || wcsstr(professores->mestrado, L"Eletrica") || wcsstr(professores->doutorado, L"Engenharia da Computacao") || wcsstr(professores->mestrado, L"Engenharia da Computacao"))) {
+        return 1;
+    } else if (wcsstr(disciplina->nome, L"Seguranca") && (wcsstr(professores->doutorado, L"Ciencia da Computacao") || wcsstr(professores->mestrado, L"Ciencia da Computacao") || wcsstr(professores->doutorado, L"Sistemas") || wcsstr(professores->mestrado, L"Sistemas"))) {
+        return 1;
+    } else if (wcsstr(disciplina->nome, L"Calculo") && (wcsstr(professores->doutorado, L"Matematica") || wcsstr(professores->mestrado, L"Matematica") || wcsstr(professores->doutorado, L"Fisica") || wcsstr(professores->mestrado, L"Fisica"))) {
+        return 1;
+    } else if (wcsstr(disciplina->nome, L"Neurais") && (wcsstr(professores->doutorado, L"Ciencia da Computacao") || wcsstr(professores->mestrado, L"Ciencia da Computacao") || wcsstr(professores->doutorado, L"Conhecimento") || wcsstr(professores->mestrado, L"Conhecimento") ||  wcsstr(professores->doutorado, L"Matematica") || wcsstr(professores->mestrado, L"Matematica"))) {
+        return 1;
+    } else if (wcsstr(disciplina->nome, L"Processamento") && (wcsstr(professores->doutorado, L"Eletrica") || wcsstr(professores->mestrado, L"Eletrica") || wcsstr(professores->doutorado, L"Computacao") || wcsstr(professores->mestrado, L"Computacao") || wcsstr(professores->doutorado, L"Informatica") || wcsstr(professores->mestrado, L"Informatica"))) {
+        return 1;
+    } else if (wcsstr(disciplina->nome, L"Visao") && (wcsstr(professores->doutorado, L"Ciencia da Computacao") || wcsstr(professores->mestrado, L"Ciencia da Computacao") || wcsstr(professores->doutorado, L"Conhecimento") || wcsstr(professores->mestrado, L"Conhecimento"))) {
+        return 1;
+    } else if (wcsstr(disciplina->nome, L"ACE") && (wcsstr(professores->doutorado, L"Administracao") || wcsstr(professores->mestrado, L"Administracao") || wcsstr(professores->doutorado, L"Producao") || wcsstr(professores->mestrado, L"Producao"))) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
 //adaptado para ter limite maximo de 1 disciplina
 //achar prof qualificado
 Professor** buscarProfQualif(Professor** professores, int num_prof, Disciplina* disciplina, int* prof_achados, wchar_t* semestre_atual, Curso* curso) {
@@ -274,18 +342,22 @@ Professor** buscarProfQualif(Professor** professores, int num_prof, Disciplina* 
             }
         }
 
-        if (tem_disciplina) continue;
+        if (tem_disciplina) continue; //pula para a próxima iteração
 
         // Critérios de qualificação
         if (disciplina->periodo <= 4) {
             qualificados[(*prof_achados)++] = professores[i];
-        } else {
-            for (int j = 0; professores[i]->especializacao[j] != NULL; j++) {
+        } else { //eletiva ou é do periodo 4 para cima
+            /*for (int j = 0; professores[i]->mestrado[j] != NULL; j++) {
                 if (wcsstr(professores[i]->especializacao[j], L"Computação") != NULL ||
                     wcsstr(professores[i]->especializacao[j], L"Engenharia") != NULL) {
                     qualificados[(*prof_achados)++] = professores[i];
                     break;
                 }
+            }*/
+
+            if (professorApto(disciplina, professores[i])) { //retorna 1 - apto ou 0 - não apto
+                 qualificados[(*prof_achados)++] = professores[i];
             }
         }
     }
@@ -293,27 +365,28 @@ Professor** buscarProfQualif(Professor** professores, int num_prof, Disciplina* 
     return qualificados;
 }
 
-//adaptado tambem
-//funcao para ofertar as disciplinas com professor (2 funcao principal)
+//funcao para ofertar as disciplinas eletivas com professor (2 funcao principal)
 void ofertarDisc(Curso* curso, const wchar_t* semestre_atual) {
     // Ordena disciplinas por período e obrigatoriedade
     qsort(curso->disciplinas, curso->qtd_disciplinas, sizeof(Disciplina*), comparar_periodo_e_obrigatoriedade);
     //ponteiro para o array que será ordenado, qtd de elementos, tam de cada elemento, função que compara dois elementos
 
     for (int i = 0; i < curso->qtd_disciplinas; i++) {
-        Disciplina* disc = curso->disciplinas[i];
+        Disciplina* disc = curso->disciplinas[i]; //ponteiro auxiliar para o endereço de cada disciplina, o colchete serve como desreferenciador
         wprintf(L"[DEBUG] Verificando disciplina %ls\n", disc->nome);
 
-        if (disc->tipo == 0 || disc->peso > 0) {
+        //if (disc->periodo == 0 || disc->periodo >= 4) { //condicional para ver se a disciplina é eletiva, ou dos 4 últimos periodos
+        if (1) { //será analisado todas as disciplinas
             int pode_ofertar = decisaoOfertaDisc(disc, curso->alunos, curso->qtd_alunos, PRAZO_MAX);
             int prof_encontrado = 0;
 
             wprintf(L"[DEBUG] decisaoOfertaDisc retornou: %d\n", pode_ofertar);
 
-            if (pode_ofertar) {
+            if (pode_ofertar) { //caso tenha alunos matriculados o suficiente
                 wprintf(L"[DEBUG] Chamando buscarProfQualif()\n");
 
-                Professor** quali = buscarProfQualif(curso->professores, curso->qtd_prof, disc, &prof_encontrado, semestre_atual, curso);
+                Professor** quali = NULL;
+                quali = buscarProfQualif(curso->professores, curso->qtd_prof, disc, &prof_encontrado, semestre_atual, curso);
 
                 wprintf(L"[DEBUG] buscarProfQualif retornou %d professor(es)\n", prof_encontrado);
 
@@ -428,18 +501,18 @@ void carregarDisc(const char* nome_arq, Disciplina*** disciplinas, int* cont) {
         if (wcsstr(linha, L"Periodo:")) {
             Disciplina* d = (Disciplina*)malloc(sizeof(Disciplina)); //ponteiro auxiliar
             
-            d->nome = (wchar_t*)malloc(100 * sizeof(wchar_t));
-            d->id = (wchar_t*)malloc(10 * sizeof(wchar_t));
-            d->horario = (wchar_t*)malloc(10 * sizeof(wchar_t));
-            d->requisitos = (wchar_t**)malloc(25 * sizeof(wchar_t*));
+            d->nome = (wchar_t*)malloc(100 * sizeof(wchar_t)); //100 é o max de caracteres para o nome
+            d->id = (wchar_t*)malloc(10 * sizeof(wchar_t)); //10 é o max de caracteres para o id
+            d->horario = (wchar_t*)malloc(10 * sizeof(wchar_t)); //10 é o max de caracteres para o horario
+            d->requisitos = (wchar_t**)malloc(3 * sizeof(wchar_t*)); //3 ponteiros wchar_t, pois 3 é o número max de pre requisitos
             
-            /*Periodo: 2, Nome: Banco de dados, Id: COMP365, CH: 72, Requisito: Nenhum, Horario: 24T34
+            /*Periodo: 2, Nome: Banco de dados, Id: COMP365, CH: 72, Requisito: NULL, Horario: 24T34
             tokens exemplo
             Periodo: 2
              Nome: Banco de dados 
              Id: COMP365
              CH: 72
-             Requisito: Nenhum
+             Requisito: NULL
              Horario: 24T34
             */
             wchar_t* svptr; //guarda a ultima posicao do token, necessário para sistemas linux
@@ -449,8 +522,8 @@ void carregarDisc(const char* nome_arq, Disciplina*** disciplinas, int* cont) {
                     swscanf(tk, L"Periodo: %d", &d->periodo); //swscanf lê de uma string wide as informações desejadas
                 } else if (wcsstr(tk, L" Nome:")) {
                     wchar_t* play = wcsstr(tk, L":") + 1; //wcsstr retorna posição do ':' e em seguida pula mais uma posição
-                    while (*play == L' ') play++;
                     //indo para o espaço vazio anterior a palavra desejada
+                    while (*play == L' ') play++; //vai caminhando até encontrar a primeira letra da palavra
                     wcscpy(d->nome, play);
                 } else if (wcsstr(tk, L" Id:")) {
                     wchar_t* play = wcsstr(tk, L":") + 1;
@@ -461,7 +534,22 @@ void carregarDisc(const char* nome_arq, Disciplina*** disciplinas, int* cont) {
                 } else if (wcsstr(tk, L" Requisito:")) {
                     wchar_t* play = wcsstr(tk, L":") + 1;
                     while (*play == L' ') play++;
-                    wcscpy(d->requisitos, play);
+
+                    if (*play != L"NULL") { //vai entrar na condicional caso a disciplina tenha pre requisitos
+                        wchar_t *ultimaPosicao; //guarda a ultima posicao do token, necessário para sistemas linux
+                        wchar_t *token = wcstok(play, L"_", &ultimaPosicao);
+                        int r = 0;
+                        while (token != NULL) { //vai preenchendo até o ponteiro não ter mais nenhum conteúdo, ou seja, sem pre requisitos
+                            d->requisitos[r++] = token;
+                            token = wcstok(NULL, L"_", &ultimaPosicao);
+                        }
+
+                        d->requisitos[r] = NULL;
+
+                    } else {
+                        wcscpy(d->requisitos, play); //d->requisitos == d->requisitos[0]
+                        d->requisitos[1] = NULL;
+                    }
                 } else if (wcsstr(tk, L" Horario:")) {
                     wchar_t* play = wcsstr(tk, L":") + 1;
                     while (*play == L' ') play++;
@@ -471,7 +559,7 @@ void carregarDisc(const char* nome_arq, Disciplina*** disciplinas, int* cont) {
                 tk = wcstok(NULL, L",", &svptr);
             }
             
-            d->lab = (wcsstr(d->nome, L"Programacao") != NULL) ? 1 : 0; //precisa de lab
+            d->lab = (wcsstr(d->nome, L"Programacao") != NULL) ? 1 : 0; //precisa de lab (1)
             
             (*disciplinas)[i++] = d;
         }
@@ -564,6 +652,7 @@ void carregarProf(const char* nome_arq, Professor*** professores, int* cont) {
                         esp_token = wcstok(NULL, L",", &esp_saveptr);
                     }
                     p->especializacao[esp_count] = NULL;*/
+
                 } else if (wcsstr(tk, L" Mestrado:")) {
                     wchar_t *play = wcsstr(tk, L":") + 1;
                     while (*play == L' ') play++;
