@@ -34,17 +34,17 @@
 typedef struct {
     int lab; //caso precise de laboratorio
     int carga;
-    int periodo; //no caso das eletivas é 0
+    int periodo; //no caso das eletivas o periodo é 0
     wchar_t* id;
     wchar_t* nome;
     wchar_t* horario;
-    wchar_t** requisitos;
+    wchar_t** requisitos; //pode haver multiplos requisitos
 } Disciplina;
 
 typedef struct {
-    int carga;
+    int carga; //carga de trabalho maxima
     int num_disciplinas; //qtd de disciplinas matriculadas
-    int disponibilidade[6][12]; //seis dias e 12 horarios de aula
+    int disponibilidade[6][12]; //seis dias (seg-sab) e 12 horarios de aula (manha e tarde)
     wchar_t* nome;
     wchar_t* mestrado;
     wchar_t* graduacao;
@@ -66,7 +66,7 @@ typedef struct {
     wchar_t** disciplinas_feitas;
 } Aluno;
 
-//o que tiver qtd provavelmente eh um contador
+//o que tiver qtd provavelmente eh um contador <- comentario buxa, como assim provavelmente? tu é o programador
 
 typedef struct {
     int qtd; 
@@ -76,7 +76,7 @@ typedef struct {
     Professor* professor;
     Aluno** matriculados;
     Disciplina* disciplina;
-} Oferta;
+} Oferta; //oferta da disciplina, com o nome do professor que irá ministrala, qtd de alunos, etc
 
 typedef struct {
     int qtd_prof;
@@ -90,13 +90,9 @@ typedef struct {
     Oferta** ofertas;
     Professor** professores;
     Disciplina** disciplinas;
-} Curso;
+} Curso; //super estrutura do curso de ciencias da computacao
 
-int extrairDia(wchar_t* horario) {
-    // Exemplo: se o horário = L"2M34", retornar 2
-    return horario[0] - L'0'; 
-}
-
+//ordenação da disciplinas
 int comparar_periodo_e_obrigatoriedade(const void* a, const void* b) { //const pois não queremos alterar o valor de cada disciplina, apenas ler
     Disciplina* d1 = *(Disciplina**)a;
     Disciplina* d2 = *(Disciplina**)b;
@@ -112,6 +108,66 @@ int comparar_periodo_e_obrigatoriedade(const void* a, const void* b) { //const p
 
     //Ordenação entre disciplinas eletivas por ordem alfabética
     return wcscmp(d1->nome, d2->nome); //0 é igual, 1 d1 é maior, ou vem depois, -1 d1 é menor, ou vem antes
+}
+
+int extrairDia(wchar_t* horario) {
+    // Exemplo: se o horário = L"2M34", retornar 2
+    return horario[0] - L'0'; 
+}
+
+int contarDiasAlocados(Professor* prof, Curso* curso, wchar_t* semestre_atual) {
+    int diasAlocados[6] = {0};
+    for (int i = 0; i < curso->qtd_ofertas; i++) {
+        Oferta* oferta = curso->ofertas[i];
+        if (oferta->professor == prof && wcscmp(oferta->semestre, semestre_atual) == 0) {
+            // Supondo que oferta->horario tem um formato "DHH:MM-HH:MM" onde D é dia (0..5)
+            // ou algo que permita identificar o dia
+            int dia = extrairDia(oferta->horario);
+            diasAlocados[dia] = 1;
+        }
+    }
+    int soma = 0;
+    for (int d = 0; d < 6; d++) soma += diasAlocados[d];
+    return soma;
+}
+
+int marcarHorario(Sala* S, int dia, int aula) {
+    if (!S || dia < 0 || dia >= 6 || aula < 0 || aula >= 12) return 0;
+    if (S->disponibilidade[dia][aula] == 1) return 0; // já ocupado
+
+    S->disponibilidade[dia][aula] = 1; // marcar como ocupado
+    return 1;
+}
+
+//essa função tem o objetivo de encontrar um bloco contínuo de horários disponíveis na agenda de um professor
+//é aqui que vamos garantir que ele seja alocado no menor numero de dias possiveis
+void buscarBlocoHorarioDisponivel(Professor* prof, int carga, int* dia_out, int* hora_out) {
+    for (int dia = 0; dia < 6; dia++) {
+        int count = 0;
+        for (int hora = 0; hora < 12; hora++) {
+            if (prof->disponibilidade[dia][hora] == 0) {
+                count++;
+                if (count == carga) {
+                    // bloco encontrado, hora inicial = hora - carga + 1
+                    *dia_out = dia;
+                    *hora_out = hora - carga + 1;
+                    return;
+                }
+            } else {
+                count = 0; // reset quando encontrar ocupado
+            }
+        }
+    }
+    // se não achou nenhum bloco
+    *dia_out = -1;
+    *hora_out = -1; 
+}
+
+//aqui vai marcar o horario do professor, para se por exemplo ele ja tem aula de 7h as 10h nao pegar esse horario em tal dia
+void marcarHorarioProfessor(Professor* prof, int dia, int hora_inicio, int carga) {
+    for (int i = 0; i < carga; i++) {
+        prof->disponibilidade[dia][hora_inicio + i] = 1; // marca como ocupado
+    }
 }
 
 //criacao de salas
@@ -168,15 +224,7 @@ Sala* criarSala(const wchar_t* codigo, int capacidade, int eh_lab){
     return S;
 }
 
-int marcarHorario(Sala* S, int dia, int aula) {
-    if (!S || dia < 0 || dia >= 6 || aula < 0 || aula >= 12) return 0;
-    if (S->disponibilidade[dia][aula] == 1) return 0; // já ocupado
-
-    S->disponibilidade[dia][aula] = 1; // marcar como ocupado
-    return 1;
-}
-
-//decisao das ofertas de disciplinas
+//decisao das ofertas de disciplinas, ou seja, será analisado se uma disciplina está apta para oferecimento 
 int decisaoOfertaDisc(Disciplina* disciplina, Aluno** alunos, int num_alunos, int periodoMax) {
     //variáveis para contabilizar quantos alunos podem cursar tal disciplina
     int interessados = 0;  //querem fazer a disciplina
@@ -234,38 +282,7 @@ int decisaoOfertaDisc(Disciplina* disciplina, Aluno** alunos, int num_alunos, in
     return 1; // verdadeiro
 }
 
-//essa função tem o objetivo de encontrar um bloco contínuo de horários disponíveis na agenda de um professor
-//é aqui que vamos garantir que ele seja alocado no menor numero de dias possiveis
-void buscarBlocoHorarioDisponivel(Professor* prof, int carga, int* dia_out, int* hora_out) {
-    for (int dia = 0; dia < 6; dia++) {
-        int count = 0;
-        for (int hora = 0; hora < 12; hora++) {
-            if (prof->disponibilidade[dia][hora] == 0) {
-                count++;
-                if (count == carga) {
-                    // bloco encontrado, hora inicial = hora - carga + 1
-                    *dia_out = dia;
-                    *hora_out = hora - carga + 1;
-                    return;
-                }
-            } else {
-                count = 0; // reset quando encontrar ocupado
-            }
-        }
-    }
-    // se não achou nenhum bloco
-    *dia_out = -1;
-    *hora_out = -1; 
-}
-
-//aqui vai marcar o horario do professor, para se por exemplo ele ja tem aula de 7h as 10h nao pegar esse horario em tal dia
-void marcarHorarioProfessor(Professor* prof, int dia, int hora_inicio, int carga) {
-    for (int i = 0; i < carga; i++) {
-        prof->disponibilidade[dia][hora_inicio + i] = 1; // marca como ocupado
-    }
-}
-
-int professorApto(Disciplina* disciplina, Professor* professores) {
+int professorApto(Disciplina* disciplina, Professor* professores) { //função que retorna 1 ou 0, cujo objetivo é dizer se o professor é apto a partir do seu doutorado ou mestrado
     if (wcsstr(disciplina->nome, L"Direito") && (wcsstr(professores->doutorado, L"Direito") || wcsstr(professores->mestrado, L"Direito"))) {
         return 1;
     } else if (wcsstr(disciplina->nome, L"Programacao") && (wcsstr(professores->doutorado, L"Ciencia da Computacao") || wcsstr(professores->mestrado, L"Ciencia da Computacao") || wcsstr(professores->doutorado, L"Informatica") || wcsstr(professores->mestrado, L"Informatica"))) {
@@ -365,7 +382,7 @@ Professor** buscarProfQualif(Professor** professores, int num_prof, Disciplina* 
     return qualificados;
 }
 
-//funcao para ofertar as disciplinas eletivas com professor (2 funcao principal)
+//funcao para ofertar as disciplinas com professor (funcao principal)
 void ofertarDisc(Curso* curso, const wchar_t* semestre_atual) {
     // Ordena disciplinas por período e obrigatoriedade
     qsort(curso->disciplinas, curso->qtd_disciplinas, sizeof(Disciplina*), comparar_periodo_e_obrigatoriedade);
@@ -382,18 +399,42 @@ void ofertarDisc(Curso* curso, const wchar_t* semestre_atual) {
 
             wprintf(L"[DEBUG] decisaoOfertaDisc retornou: %d\n", pode_ofertar);
 
-            if (pode_ofertar) { //caso tenha alunos matriculados o suficiente
-                wprintf(L"[DEBUG] Chamando buscarProfQualif()\n");
+            if (pode_ofertar) { //caso a disciplinas cumpram os requisitos para ser ofertada
+                wprintf(L"[DEBUG] Chamando buscarProfQualif()\n"); 
 
                 Professor** quali = NULL;
                 quali = buscarProfQualif(curso->professores, curso->qtd_prof, disc, &prof_encontrado, semestre_atual, curso);
 
                 wprintf(L"[DEBUG] buscarProfQualif retornou %d professor(es)\n", prof_encontrado);
 
-                if (prof_encontrado > 0) {
-                    wprintf(L"\n----- Professores e sua(s) Disciplina(s) -----\n");
+                if (prof_encontrado == 1) {
+                    wprintf(L"\n----- Professor apto para a Disciplina -----\n");
                     wprintf(L"%ls: %ls\n", quali[0]->nome, disc->nome);
                     wprintf(L"------------------------------------------------\n");
+
+                    // Criar nova oferta
+                    Oferta* nova_oferta = malloc(sizeof(Oferta));
+                    nova_oferta->disciplina = disc;
+                    nova_oferta->professor = quali[0];
+                    nova_oferta->sala = NULL; // implementar lógica de alocação de sala se necessário
+                    wcscpy(nova_oferta->semestre, semestre_atual);
+
+                    curso->ofertas[curso->qtd_ofertas++] = nova_oferta;
+                } else if (prof_encontrado > 0) {
+                    //wprintf(L"\n----- Professores e sua(s) Disciplina(s) -----\n");
+                    wprintf(L"\n----- Professor(es) apto(s) para a Disciplina -----\n");
+                    int p = 0;
+                    while (quali[p]->nome != NULL) { //esse loop irá percorrer toda a matriz e mostrará os nomes dos professores aptos
+                        wprintf(L"%ls: %ls\n", quali[p++]->nome, disc->nome);
+                    }
+                    wprintf(L"------------------------------------------------\n");
+
+                    //função inativa
+                    professorEscolhido(); //<- função para selecionar o professor que ministrará essa disciplina
+                    //um professor pode ministrar várias disciplinas, contanto que caiba na sua carga hóraria
+                    //a lista de prioridades será: obrigatórias (decrescente, 7 periodo -> 1 periodo) > eletivas (qualquer ordem)
+
+                    //funções de horário ainda não foram utilizas, apesar de estarem "prontas" 
 
                     // Criar nova oferta
                     Oferta* nova_oferta = malloc(sizeof(Oferta));
@@ -568,22 +609,6 @@ void carregarDisc(const char* nome_arq, Disciplina*** disciplinas, int* cont) {
     (*disciplinas)[i] = NULL;
 
     fclose(file);
-}
-
-int contarDiasAlocados(Professor* prof, Curso* curso, wchar_t* semestre_atual) {
-    int diasAlocados[6] = {0};
-    for (int i = 0; i < curso->qtd_ofertas; i++) {
-        Oferta* oferta = curso->ofertas[i];
-        if (oferta->professor == prof && wcscmp(oferta->semestre, semestre_atual) == 0) {
-            // Supondo que oferta->horario tem um formato "DHH:MM-HH:MM" onde D é dia (0..5)
-            // ou algo que permita identificar o dia
-            int dia = extrairDia(oferta->horario);
-            diasAlocados[dia] = 1;
-        }
-    }
-    int soma = 0;
-    for (int d = 0; d < 6; d++) soma += diasAlocados[d];
-    return soma;
 }
 
 void carregarProf(const char* nome_arq, Professor*** professores, int* cont) {
@@ -776,11 +801,9 @@ void freeDisciplinas(Disciplina* d) {
 void freeProf(Professor* p) {
     if (!p) return;
     if (p->nome) free(p->nome);
-    if (p->formacao) free(p->formacao);
-    if (p->especializacao) {
-        for (int i = 0; p->especializacao[i]; i++) free(p->especializacao[i]);
-        free(p->especializacao);
-    }
+    if (p->graduacao) free(p->graduacao);
+    if (p->mestrado) free(p->mestrado);
+    if (p->doutorado) free(p->doutorado);
     free(p);
 }
 
