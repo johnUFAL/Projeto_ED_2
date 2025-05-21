@@ -5,3 +5,5 @@
 5. _wcsdup ou wcsdup: duplica uma string wide (alocação de memória)
 6. wcsstr: vai procurar a primera vez que um parâmetro acontece em uma string wide
 7. wcscmp: compara duas string wide
+8. exit(1) -> terminou com erro 
+9. exit(0) -> terminou com sucesso
