@@ -104,11 +104,14 @@ int comparar_periodo_e_obrigatoriedade(const void* a, const void* b) { //const p
     if (d1->periodo != 0 && d2->periodo == 0) return -1; //d1 volta uma posição, ou primeira posição
 
     //Ordenação entre matérias obrigatórias
-    if (d1->periodo != d2->periodo)
-        return d1->periodo - d2->periodo; //d1 pode avançar ou voltar x (d1->periodo - d2->periodo) posições 
+    //if (d1->periodo != d2->periodo)
+        //return d1->periodo - d2->periodo; //d1 pode avançar ou voltar x (d1->periodo - d2->periodo) posições 
 
     //Ordenação entre disciplinas eletivas por ordem alfabética
-    return wcscmp(d1->nome, d2->nome); //0 é igual, 1 d1 é maior, ou vem depois, -1 d1 é menor, ou vem antes
+                //0 é igual, 1 d1 é maior, ou vem depois, -1 d1 é menor, ou vem antes
+    
+    //ordena por perido crescente pra obgt
+    return d1->periodo, d2->periodo; 
 }
 
 int extrairDia(wchar_t* horario) {
@@ -244,8 +247,7 @@ int decisaoOfertaDisc(Disciplina* disciplina, Aluno** alunos, int num_alunos, in
 
         //pre requisito, caso o aluno ainda não tenha pagado essa disciplina
         int matricular = 1; //vai ser o resultado final após a checagem dos x pre requisitos, 1 - pode se matricular, 0 - não pode se matricular  
-        if (disciplina->requisitos[0] && wcscmp(disciplina->requisitos[0], L"NULL") != 0)
-        {
+        if (disciplina->requisitos != NULL && disciplina->requisitos[0] != NULL && wcscmp(disciplina->requisitos[0], L"NULL") != 0)        {
             for (int k = 0; disciplina->requisitos[k] != NULL; k++) { //vai caminhando por todos os pre requisitos da disciplina
                 int permitido = 0; //vai dizer se ele cumpre com todos os pre requisitos
                 
@@ -336,10 +338,11 @@ int professorApto(Disciplina* disciplina, Professor* professores) { //função q
         return 1;
     } else if (wcsstr(disciplina->nome, L"ACE") && (wcsstr(professores->doutorado, L"Administracao") || wcsstr(professores->mestrado, L"Administracao") || wcsstr(professores->doutorado, L"Producao") || wcsstr(professores->mestrado, L"Producao"))) {
         return 1;
-    } else {
-        return 0;
-    }
-}
+    } else if (wcsstr(disciplina->nome, L"Direito") && (wcsstr(professores->doutorado, L"Direito") || 
+               wcsstr(professores->mestrado, L"Direito") || wcsstr(professores->graduacao, L"Direito"))) {
+        return 1;
+    } else return 0;
+}                                   
 
 //adaptado para ter limite maximo de 1 disciplina
 //achar prof qualificado
@@ -393,7 +396,14 @@ int comparaPesoPerido(const void* a, const void* b) {
 //funcao para ofertar as disciplinas com professor (funcao principal)
 void ofertarDisc(Curso* curso, const wchar_t* semestre_atual) {
     //ordena por peso e periodo
-    qsort(curso->disciplinas, curso->qtd_disciplinas, sizeof(Disciplina*), comparaPesoPerido);
+    qsort(curso->disciplinas, curso->qtd_disciplinas, sizeof(Disciplina*), comparar_periodo_e_obrigatoriedade);   
+    
+    //so para checar!!!
+    wprintf(L"\n=== Disciplinas ordenadas ===\n");
+    for (int i = 0; i < curso->qtd_disciplinas; i++) {
+        Disciplina* d = curso->disciplinas[i];
+        wprintf(L"%d. %ls Periodo: %d)\n", i+1, d->nome, d->periodo);
+    }
 
     //controle de profs ja alocados na oferta
     int* prof_alocados = calloc(curso->qtd_prof, sizeof(int));
@@ -524,6 +534,17 @@ void carregarDisc(const char* nome_arq, Disciplina*** disciplinas, int* cont) {
         if (wcsstr(linha, L"Periodo:")) {
             Disciplina* d = (Disciplina*)malloc(sizeof(Disciplina));
             
+            if (!d) {
+                perror("Erro ao alocar disciplina");
+                fclose(file);
+                exit(1);
+            }
+
+            d->nome = NULL;
+            d->id = NULL;
+            d->horario = NULL;
+            d->requisitos = NULL;
+
             d->nome = (wchar_t*)malloc(100 * sizeof(wchar_t));
             d->id = (wchar_t*)malloc(10 * sizeof(wchar_t));
             d->horario = (wchar_t*)malloc(10 * sizeof(wchar_t));
@@ -544,6 +565,19 @@ void carregarDisc(const char* nome_arq, Disciplina*** disciplinas, int* cont) {
             while (tk != NULL) {
                 if (wcsstr(tk, L"Periodo:")) {
                     swscanf(tk, L"Periodo: %d", &d->periodo);
+                    if (d->periodo == 0) {
+                        //eletivas peoso 2
+                        d->peso = 2;
+                    } else if (d->periodo <= 4 && wcsstr(d->nome, L"Programacao") != NULL) {
+                        //ate o 4 perido obrigatorias de programacao peso 3
+                        d->peso = 3;
+                    } else if (d->periodo > 4 && wcsstr(d->nome, L"Programacao") != NULL) {
+                        //obrigatoria de programacao apos 4 perido peso 2
+                        d->peso = 2;
+                    } else {
+                        //demais peso 4
+                        d->peso = 1;
+                    }
                 } else if (wcsstr(tk, L" Nome:")) {
                     wchar_t* play = wcsstr(tk, L":") + 1;
                     while (*play == L' ') play++;
@@ -568,8 +602,7 @@ void carregarDisc(const char* nome_arq, Disciplina*** disciplinas, int* cont) {
                         }
                         d->requisitos[r] = NULL;
                     } else {
-                        d->requisitos[0] = wcsdup(L"NULL");
-                        d->requisitos[1] = NULL;
+                        d->requisitos[0] = NULL; 
                     }
                 } else if (wcsstr(tk, L" Horario:")) {
                     wchar_t* play = wcsstr(tk, L":") + 1;
@@ -767,7 +800,11 @@ void freeDisciplinas(Disciplina* d) {
     if (d->id) free(d->id);
     if (d->horario) free(d->horario);
     if (d->requisitos) {
-        for (int i = 0; d->requisitos[i]; i++) free(d->requisitos[i]);
+        if (d->requisitos[0] != NULL) {
+            for (int i = 0; d->requisitos[i]; i++) {
+                free(d->requisitos[i]);
+            }
+        }
         free(d->requisitos);
     }
     free(d);
@@ -855,8 +892,8 @@ void freeCurso(Curso* curso) {
     }
 }
 
-//função para identificar a maneira como os requistos são separados para poder incluir
-wchar_t** dividir_requisitos(const wchar_t* linha) {
+ //função para identificar a maneira como os requistos são separados para poder incluir
+ wchar_t** dividir_requisitos(const wchar_t* linha) {
     wchar_t** lista = malloc(MAX_REQUISITOS * sizeof(wchar_t*));
     int count = 0;
     wchar_t* copia = wcsdup(linha);
@@ -891,7 +928,7 @@ void extrair_valor(const wchar_t* linha, const wchar_t* chave, wchar_t* destino)
 }
 
 // Leitura principal do arquivo de texto para poder organizar na struct
-Disciplina** ler_disciplinas(const char* nome_arquivo, int* total) {
+/*Disciplina** ler_disciplinas(const char* nome_arquivo, int* total) {
     setlocale(LC_ALL, ""); // Garante suporte a UTF-8 no terminal
     FILE* arquivo = fopen(nome_arquivo, "r");
     if (!arquivo) {
@@ -937,8 +974,7 @@ Disciplina** ler_disciplinas(const char* nome_arquivo, int* total) {
 
     fclose(arquivo);
     return lista;
-}
-
+} */
 
 int comparar_periodo_e_prereq(const void* a, const void* b) {
     Disciplina* d1 = *(Disciplina**)a;
@@ -959,23 +995,22 @@ int comparar_periodo_e_prereq(const void* a, const void* b) {
     return d2_tem_req - d1_tem_req;
 }
 
-
-
 int comparar_periodo_e_enfase(const void* a, const void* b) {
     Disciplina* d1 = *(Disciplina**)a;
     Disciplina* d2 = *(Disciplina**)b;
 
-    // Agora: período 0 deve vir ANTES
+    // Disciplinas de período 0 (eletivas/ênfase) vêm primeiro
+    if (d1->periodo == 0 && d2->periodo != 0) return -1;
+    if (d1->periodo != 0 && d2->periodo == 0) return 1;
+
+    // Para disciplinas do mesmo tipo (ambas ênfase ou ambas obrigatórias)
+    // Ordena por período crescente
     if (d1->periodo != d2->periodo)
-        return (d1->periodo == 0) ? -1 :
-               (d2->periodo == 0) ? 1 :
-               d1->periodo - d2->periodo;
+        return d1->periodo - d2->periodo;
 
-    // Dentro do mesmo período: peso == 0 (ênfase) vem primeiro
-    int d1_enfase = (d1->peso == 0);
-    int d2_enfase = (d2->peso == 0);
-
-    return d2_enfase - d1_enfase;
+    // Se forem ambas eletivas (período 0), pode usar outro critério se necessário
+    // Por exemplo, ordenar alfabeticamente:
+    return wcscmp(d1->nome, d2->nome);
 }
 
 //Função p mostrar como ficou organizado as disciplinas, mas pode apagar se n for necessário para apresentação
@@ -1090,6 +1125,14 @@ int main() {
     carregarDisc("disciplinas.txt", &curso->disciplinas, &curso->qtd_disciplinas); //Disciplina** disciplinas
     carregarProf("professores.txt", &curso->professores, &curso->qtd_prof); //Professor** professores
     carregarAluno("alunos.txt", &curso->alunos, &curso->qtd_alunos); //Aluno** aluno
+
+    //so por seguranca
+    if (curso->qtd_disciplinas == 0 || curso->qtd_prof == 0 || curso->qtd_alunos == 0) {
+        wprintf(L"Erro: Nenhum dado foi carregado corretamente!\n");
+        freeCurso(curso);
+        free(curso);
+        return 1;
+    }
 
     // Inicializa ponteiros e contadores
     curso->ofertas = (Oferta**)malloc(curso->qtd_disciplinas * sizeof(Oferta*)); // Garantir espaço
