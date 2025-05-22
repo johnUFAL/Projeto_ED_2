@@ -40,5 +40,5 @@ Periodo: 0, Nome: Visao Computacional, Id: COMP400, CH: 72, Requisito: NULL, Hor
 Periodo: 0, Nome: ACE 1, Id: COMP377, CH: 75, Requisito: NULL, Horario: 6T12, Peso: 1
 Periodo: 0, Nome: ACE 2, Id: COMP383, CH: 75, Requisito: NULL, Horario: 6T23, Peso: 1
 Periodo: 0, Nome: ACE 3, Id: COMP384, CH: 75, Requisito: NULL, Horario: 5T12, Peso: 1 
-Periodo: 0, Nome: ACE 4, Id: COMP388, CH: 75, Requisito: NULL, Horario: 2N123, Peso: 1 
+Periodo: 0, Nome: ACE 4, Id: COMP388, CH: 75, Requisito: NULL, Horario: 2N123, Peso: 1
 Periodo: 0, Nome: ACE 5, Id: COMP385, CH: 75, Requisito: NULL, Horario: 7M23, Peso: 1
