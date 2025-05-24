@@ -227,6 +227,40 @@ Sala* criarSala(const wchar_t* codigo, int capacidade, int eh_lab){
     }
     return S;
 }
+//resumo do funcionamento da função imprimirSalasComOfertas
+//percorre todas as salas do curso e para cada sala ela procura entre as ofertas de disciplinas quais estão alocadas naquela sala
+//Imprime o nome da disciplina e outras coisas referentes a ela
+void imprimirSalasComOfertas(Curso* curso) {
+    wprintf(L"\n====== Salas com disciplinas alocadas ======\n");
+
+    for (int i = 0; i < curso->qtd_salas; i++) {
+        Sala* sala = curso->salas[i];
+        wprintf(L"\nSala %ls | Capacidade: %d | Tipo: %ls\n",
+                sala->codigo,
+                sala->capacidade,
+                sala->eh_lab ? L"Laboratório" : L"Sala comum");
+
+        int encontrou = 0;
+
+        for (int j = 0; j < curso->qtd_ofertas; j++) {
+            Oferta* oferta = curso->ofertas[j];
+
+            if (oferta->sala && wcscmp(oferta->sala->codigo, sala->codigo) == 0) {
+                encontrou = 1;
+                wprintf(L"  • %ls (%ls) - Horário: %ls\n",
+                        oferta->disciplina->nome,
+                        oferta->disciplina->id,
+                        oferta->disciplina->horario);
+            }
+        }
+
+        if (!encontrou) {
+            wprintf(L"  Nenhuma disciplina alocada nesta sala.\n");
+        }
+    }
+}
+
+
 
 //decisao das ofertas de disciplinas, ou seja, será analisado se uma disciplina está apta para oferecimento 
 int decisaoOfertaDisc(Disciplina* disciplina, Aluno** alunos, int num_alunos, int periodoMax) {
@@ -796,19 +830,22 @@ void carregarAluno(const char* nome_arq, Aluno*** alunos, int* cont) {
 
 void freeDisciplinas(Disciplina* d) {
     if (!d) return;
+
     if (d->nome) free(d->nome);
     if (d->id) free(d->id);
     if (d->horario) free(d->horario);
+
     if (d->requisitos) {
-        if (d->requisitos[0] != NULL) {
-            for (int i = 0; d->requisitos[i]; i++) {
-                free(d->requisitos[i]);
-            }
+        // não precisa verificar d->requisitos[0] != NULL antes do loop
+        for (int i = 0; d->requisitos[i] != NULL; i++) {
+            free(d->requisitos[i]);
         }
         free(d->requisitos);
     }
+
     free(d);
 }
+
 
 void freeProf(Professor* p) {
     if (!p) return;
@@ -822,26 +859,41 @@ void freeProf(Professor* p) {
 void freeAluno(Aluno* a) {
     if (!a) return;
     if (a->nome) free(a->nome);
+
     if (a->disciplinas_feitas) {
-        for (int i = 0; a->disciplinas_feitas[i]; i++) free(a->disciplinas_feitas[i]);
+        for (int i = 0; a->disciplinas_feitas[i] != NULL; i++) {
+            free(a->disciplinas_feitas[i]);
+        }
         free(a->disciplinas_feitas);
     }
+
     if (a->disciplinas_falta) {
-        for (int i = 0; a->disciplinas_falta[i]; i++) free(a->disciplinas_falta[i]);
+        for (int i = 0; a->disciplinas_falta[i] != NULL; i++) {
+            free(a->disciplinas_falta[i]);
+        }
         free(a->disciplinas_falta);
     }
+
     free(a);
 }
 
+
 void freeSala(Sala* s) {
     if (!s) return;
-    if (s->codigo) free(s->codigo);
+
+    if (s->codigo) {
+        free(s->codigo);
+    }
+
     if (s->disponibilidade) {
         for (int i = 0; i < 6; i++) {
-            free(s->disponibilidade[i]);
+            if (s->disponibilidade[i]) {
+                free(s->disponibilidade[i]);
+            }
         }
         free(s->disponibilidade);
     }
+
     free(s);
 }
 
@@ -849,7 +901,10 @@ void freeOferta(Oferta* o) {
     if (!o) return;
     if (o->horario) free(o->horario);
     if (o->semestre) free(o->semestre);
+
+    // Só libera o vetor de ponteiros, não os alunos
     if (o->matriculados) free(o->matriculados);
+
     free(o);
 }
 
@@ -1149,6 +1204,8 @@ int main() {
 
     // Processa oferta de disciplinas
     ofertarDisc(curso, L"2025.1");
+    imprimirSalasComOfertas(curso);
+    
 
     // Liberação de memória
     freeCurso(curso);  // Esta função deve liberar tudo que estiver dentro de `curso`
