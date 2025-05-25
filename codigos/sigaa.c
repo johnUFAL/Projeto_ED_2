@@ -228,87 +228,6 @@ Sala* criarSala(const wchar_t* codigo, int capacidade, int eh_lab){
     return S;
 }
 
-Sala** lerSalasDeArquivo(const char* nomeArquivo, int* qtd_salas) {
-    FILE* arquivo = fopen(nomeArquivo, "r");
-    if (!arquivo) {
-        wprintf(L"Erro ao abrir o arquivo de salas.\n");
-        return NULL;
-    }
-
-    Sala** salas = NULL;
-    int capacidade, eh_lab;
-    wchar_t codigo[100];
-    int count = 0;
-
-    while (fwscanf(arquivo, L"%99ls %d %d", codigo, &capacidade, &eh_lab) == 3) {
-        Sala* novaSala = criarSala(codigo, capacidade, eh_lab);
-        if (!novaSala) {
-            wprintf(L"Erro ao criar sala.\n");
-            // Libera as salas já alocadas
-            for (int i = 0; i < count; i++) {
-                freeSala(salas[i]);
-            }
-            free(salas);
-            fclose(arquivo);
-            return NULL;
-        }
-
-        Sala** temp = realloc(salas, (count + 1) * sizeof(Sala*));
-        if (!temp) {
-            wprintf(L"Erro ao realocar vetor de salas.\n");
-            freeSala(novaSala);
-            for (int i = 0; i < count; i++) {
-                freeSala(salas[i]);
-            }
-            free(salas);
-            fclose(arquivo);
-            return NULL;
-        }
-
-        salas = temp;
-        salas[count++] = novaSala;
-    }
-
-    fclose(arquivo);
-    *qtd_salas = count;
-    return salas;
-}
-
-//resumo do funcionamento da função imprimirSalasComOfertas
-//percorre todas as salas do curso e para cada sala ela procura entre as ofertas de disciplinas quais estão alocadas naquela sala
-//Imprime o nome da disciplina e outras coisas referentes a ela
-void imprimirSalasComOfertas(Curso* curso) {
-    wprintf(L"\n====== Salas com disciplinas alocadas ======\n");
-
-    for (int i = 0; i < curso->qtd_salas; i++) {
-        Sala* sala = curso->salas[i];
-        wprintf(L"\nSala %ls | Capacidade: %d | Tipo: %ls\n",
-                sala->codigo,
-                sala->capacidade,
-                sala->eh_lab ? L"Laboratório" : L"Sala comum");
-
-        int encontrou = 0;
-
-        for (int j = 0; j < curso->qtd_ofertas; j++) {
-            Oferta* oferta = curso->ofertas[j];
-
-            if (oferta->sala && wcscmp(oferta->sala->codigo, sala->codigo) == 0) {
-                encontrou = 1;
-                wprintf(L"  • %ls (%ls) - Horário: %ls\n",
-                        oferta->disciplina->nome,
-                        oferta->disciplina->id,
-                        oferta->disciplina->horario);
-            }
-        }
-
-        if (!encontrou) {
-            wprintf(L"  Nenhuma disciplina alocada nesta sala.\n");
-        }
-    }
-}
-
-
-
 //decisao das ofertas de disciplinas, ou seja, será analisado se uma disciplina está apta para oferecimento 
 int decisaoOfertaDisc(Disciplina* disciplina, Aluno** alunos, int num_alunos, int periodoMax) {
     //variáveis para contabilizar quantos alunos podem cursar tal disciplina
@@ -514,12 +433,24 @@ void ofertarDisc(Curso* curso, const wchar_t* semestre_atual) {
                 wprintf(L"%ls: %ls \n", prof_selecionado->nome, disc->nome);
                 
                 //nova oferta
-                Oferta* nova_oferta = malloc(sizeof(Oferta));
+                Oferta* nova_oferta = calloc(1, sizeof(Oferta)); 
+                if (!nova_oferta) {
+                    perror("Erro ao alocar nova_oferta");
+                    free(prof_alocados); 
+                    return; 
+                }
+
                 nova_oferta->disciplina = disc;
                 nova_oferta->professor = prof_selecionado;
-                nova_oferta->sala = NULL;
                 nova_oferta->semestre = wcsdup(semestre_atual);
+                if (nova_oferta->semestre == NULL && semestre_atual != NULL) {
+                    perror("Erro ao duplicar semestre para nova_oferta");
+                    free(nova_oferta); 
+                    return; 
+                }
+
                 curso->ofertas[curso->qtd_ofertas++] = nova_oferta;
+           
             } else {
                 if (disc->peso >= 2) {
                     wprintf(L"\n--------------------------------------------\n");
@@ -994,6 +925,87 @@ void freeCurso(Curso* curso) {
     }
 }
 
+
+Sala** lerSalasDeArquivo(const char* nomeArquivo, int* qtd_salas) {
+    FILE* arquivo = fopen(nomeArquivo, "r");
+    if (!arquivo) {
+        wprintf(L"Erro ao abrir o arquivo de salas.\n");
+        return NULL;
+    }
+
+    Sala** salas = NULL;
+    int capacidade, eh_lab;
+    wchar_t codigo[100];
+    int count = 0;
+
+    while (fwscanf(arquivo, L"%99ls %d %d", codigo, &capacidade, &eh_lab) == 3) {
+        Sala* novaSala = criarSala(codigo, capacidade, eh_lab);
+        if (!novaSala) {
+            wprintf(L"Erro ao criar sala.\n");
+            // Libera as salas já alocadas
+            for (int i = 0; i < count; i++) {
+                freeSala(salas[i]);
+            }
+            free(salas);
+            fclose(arquivo);
+            return NULL;
+        }
+
+        Sala** temp = realloc(salas, (count + 1) * sizeof(Sala*));
+        if (!temp) {
+            wprintf(L"Erro ao realocar vetor de salas.\n");
+            freeSala(novaSala);
+            for (int i = 0; i < count; i++) {
+                freeSala(salas[i]);
+            }
+            free(salas);
+            fclose(arquivo);
+            return NULL;
+        }
+
+        salas = temp;
+        salas[count++] = novaSala;
+    }
+
+    fclose(arquivo);
+    *qtd_salas = count;
+    return salas;
+}
+
+//resumo do funcionamento da função imprimirSalasComOfertas
+//percorre todas as salas do curso e para cada sala ela procura entre as ofertas de disciplinas quais estão alocadas naquela sala
+//Imprime o nome da disciplina e outras coisas referentes a ela
+void imprimirSalasComOfertas(Curso* curso) {
+    wprintf(L"\n====== Salas com disciplinas alocadas ======\n");
+
+    for (int i = 0; i < curso->qtd_salas; i++) {
+        Sala* sala = curso->salas[i];
+        wprintf(L"\nSala %ls | Capacidade: %d | Tipo: %ls\n",
+                sala->codigo,
+                sala->capacidade,
+                sala->eh_lab ? L"Laboratório" : L"Sala comum");
+
+        int encontrou = 0;
+
+        for (int j = 0; j < curso->qtd_ofertas; j++) {
+            Oferta* oferta = curso->ofertas[j];
+
+            if (oferta->sala && wcscmp(oferta->sala->codigo, sala->codigo) == 0) {
+                encontrou = 1;
+                wprintf(L"  • %ls (%ls) - Horário: %ls\n",
+                        oferta->disciplina->nome,
+                        oferta->disciplina->id,
+                        oferta->disciplina->horario);
+            }
+        }
+
+        if (!encontrou) {
+            wprintf(L"  Nenhuma disciplina alocada nesta sala.\n");
+        }
+    }
+}
+
+
  //função para identificar a maneira como os requistos são separados para poder incluir
  wchar_t** dividir_requisitos(const wchar_t* linha) {
     wchar_t** lista = malloc(MAX_REQUISITOS * sizeof(wchar_t*));
@@ -1227,6 +1239,12 @@ int main() {
     carregarDisc("disciplinas.txt", &curso->disciplinas, &curso->qtd_disciplinas); //Disciplina** disciplinas
     carregarProf("professores.txt", &curso->professores, &curso->qtd_prof); //Professor** professores
     carregarAluno("alunos.txt", &curso->alunos, &curso->qtd_alunos); //Aluno** aluno
+    
+    curso->salas = lerSalasDeArquivo("sala.txt", &curso->qtd_salas);
+        if (curso->salas == NULL && curso->qtd_salas != 0) { 
+            wprintf(L"Falha ao carregar salas.\n");
+        }
+
 
     //so por seguranca
     if (curso->qtd_disciplinas == 0 || curso->qtd_prof == 0 || curso->qtd_alunos == 0) {
@@ -1240,8 +1258,8 @@ int main() {
     curso->ofertas = (Oferta**)malloc(curso->qtd_disciplinas * sizeof(Oferta*)); // Garantir espaço
     curso->qtd_ofertas = 0;
 
-    curso->salas = NULL;
-    curso->qtd_salas = 0;
+    //curso->salas = NULL;
+   // curso->qtd_salas = 0;
 
     // Informações do curso
     wprintf(L"\nCurso: %ls\n", curso->nome);
