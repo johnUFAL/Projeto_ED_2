@@ -227,6 +227,53 @@ Sala* criarSala(const wchar_t* codigo, int capacidade, int eh_lab){
     }
     return S;
 }
+
+Sala** lerSalasDeArquivo(const char* nomeArquivo, int* qtd_salas) {
+    FILE* arquivo = fopen(nomeArquivo, "r");
+    if (!arquivo) {
+        wprintf(L"Erro ao abrir o arquivo de salas.\n");
+        return NULL;
+    }
+
+    Sala** salas = NULL;
+    int capacidade, eh_lab;
+    wchar_t codigo[100];
+    int count = 0;
+
+    while (fwscanf(arquivo, L"%99ls %d %d", codigo, &capacidade, &eh_lab) == 3) {
+        Sala* novaSala = criarSala(codigo, capacidade, eh_lab);
+        if (!novaSala) {
+            wprintf(L"Erro ao criar sala.\n");
+            // Libera as salas já alocadas
+            for (int i = 0; i < count; i++) {
+                freeSala(salas[i]);
+            }
+            free(salas);
+            fclose(arquivo);
+            return NULL;
+        }
+
+        Sala** temp = realloc(salas, (count + 1) * sizeof(Sala*));
+        if (!temp) {
+            wprintf(L"Erro ao realocar vetor de salas.\n");
+            freeSala(novaSala);
+            for (int i = 0; i < count; i++) {
+                freeSala(salas[i]);
+            }
+            free(salas);
+            fclose(arquivo);
+            return NULL;
+        }
+
+        salas = temp;
+        salas[count++] = novaSala;
+    }
+
+    fclose(arquivo);
+    *qtd_salas = count;
+    return salas;
+}
+
 //resumo do funcionamento da função imprimirSalasComOfertas
 //percorre todas as salas do curso e para cada sala ela procura entre as ofertas de disciplinas quais estão alocadas naquela sala
 //Imprime o nome da disciplina e outras coisas referentes a ela
