@@ -402,7 +402,7 @@ void ofertarDisc(Curso* curso, const wchar_t* semestre_atual) {
     wprintf(L"\n=== Disciplinas ordenadas ===\n");
     for (int i = 0; i < curso->qtd_disciplinas; i++) {
         Disciplina* d = curso->disciplinas[i];
-        wprintf(L"%d. %ls Periodo: %d)\n", i+1, d->nome, d->periodo);
+        wprintf(L"%d. %ls, Periodo: (%d)\n", i+1, d->nome, d->periodo);
     }
 
     //controle de profs ja alocados na oferta
@@ -887,7 +887,66 @@ void freeOferta(Oferta* o) {
 }
 
 void freeCurso(Curso* curso) {
-    if (curso == NULL) return;
+    /*typedef struct {
+    int qtd_prof;
+    int qtd_salas;
+    int qtd_alunos;
+    int qtd_ofertas;
+    int qtd_disciplinas;  
+    Sala** salas;
+    wchar_t* nome;
+    Aluno** alunos;
+    Oferta** ofertas;
+    Professor** professores;
+    Disciplina** disciplinas;
+} Curso;*/
+
+    if (curso == NULL) printf("Não há nada para se liberar!\n"); return;
+
+    //free sala
+    int i = 0;
+    while (curso->salas[i] != NULL) {
+        free(curso->salas[i]);
+        i++;
+    }
+    free(curso->salas);
+
+    //free nome do curso
+    free(curso->nome);
+
+    //free alunos
+    i = 0;
+    while (curso->alunos[i] != NULL) {
+        free(curso->alunos[i]);
+        i++;
+    }
+    free(curso->alunos);
+
+    //free ofertas
+    i = 0;
+    while (curso->ofertas[i] != NULL) {
+        free(curso->ofertas[i]);
+        i++;
+    }
+    free(curso->ofertas);
+
+    //free professores
+    i = 0;
+    while (curso->professores[i] != NULL) {
+        free(curso->professores[i]);
+        i++;
+    }
+    free(curso->professores);
+
+    //free disciplinas
+    i = 0;
+    while (curso->disciplinas[i] != NULL) {
+        free(curso->disciplinas[i]);
+        i++;
+    }
+    free(curso->disciplinas);
+
+    /*
     if (curso->nome != NULL) free(curso->nome);
     if (curso->disciplinas != NULL) {
         for (int i = 0; i < curso->qtd_disciplinas; i++) {
@@ -923,6 +982,9 @@ void freeCurso(Curso* curso) {
         }
         free(curso->ofertas);
     }
+        */
+
+    return;
 }
 
 
