@@ -67,7 +67,7 @@ typedef struct {
     wchar_t** disciplinas_feitas;
 } Aluno;
 
-//o que tiver qtd provavelmente eh um contador <- comentario buxa, como assim provavelmente? tu é o programador
+//o que tiver qtd provavelmente eh um contador <- comentario buxa, como assim provavelmente? tu é o programador <- "comentário chad, tem que botar pocando mesmo" by chatGPT
 
 typedef struct {
     int qtd; 
