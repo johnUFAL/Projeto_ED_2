@@ -35,7 +35,7 @@ typedef struct {
     int lab; //caso precise de laboratorio
     int carga;
     int periodo; //no caso das eletivas o periodo é 0
-    int peso; //3 = computação e <= 4 perido, 2 = eletiva ou computação > 4 perido, 1 = restante
+    int peso; //3 = computação e periodo <= 4, 2 = eletiva ou computação e periodo > 4, 1 = restante
     wchar_t* id;
     wchar_t* nome;
     wchar_t* horario;
@@ -230,6 +230,7 @@ Sala* criarSala(const wchar_t* codigo, int capacidade, int eh_lab){
 
 //decisao das ofertas de disciplinas, ou seja, será analisado se uma disciplina está apta para oferecimento 
 int decisaoOfertaDisc(Disciplina* disciplina, Aluno** alunos, int num_alunos, int periodoMax) {
+    
     //variáveis para contabilizar quantos alunos podem cursar tal disciplina
     int interessados = 0;  //querem fazer a disciplina
     int no_prazo = 0; //estao no prazo limite do curso
@@ -246,12 +247,11 @@ int decisaoOfertaDisc(Disciplina* disciplina, Aluno** alunos, int num_alunos, in
         if (feita) continue; //pula para o próximo aluno
 
         //pre requisito, caso o aluno ainda não tenha pagado essa disciplina
-        int matricular = 1; //vai ser o resultado final após a checagem dos x pre requisitos, 1 - pode se matricular, 0 - não pode se matricular  
-        if (disciplina->requisitos != NULL && disciplina->requisitos[0] != NULL && wcscmp(disciplina->requisitos[0], L"NULL") != 0)        {
-            for (int k = 0; disciplina->requisitos[k] != NULL; k++) { //vai caminhando por todos os pre requisitos da disciplina
-                int permitido = 0; //vai dizer se ele cumpre com todos os pre requisitos
-                
-                for (int l = 0; alunos[i]->disciplinas_feitas[l] != NULL; l++) { //vai caminhando por todos as disciplinas pagas pelo aluno, para ver se ele pode pagar esta
+        int matricular = 1; //vai ser o resultado final após a checagem dos x pre requisitos, 1 - pode se matricular, 0 - não pode se matricular 
+        int permitido = 0; //vai dizer se ele cumpre com todos os pre requisitos 
+        if (disciplina->requisitos != NULL && disciplina->requisitos[0] != NULL && wcscmp(disciplina->requisitos[0], L"NULL") != 0) {
+            for (int k = 0; disciplina->requisitos[k] != NULL; k++) { //vai caminhando por todos os pre requisitos da disciplina                
+                for (int l = 0; alunos[i]->disciplinas_feitas[l] != NULL; l++) { //vai caminhando por todas as disciplinas pagas pelo aluno, para ver se ele pode pagar esta disciplina
                     if (wcscmp(alunos[i]->disciplinas_feitas[l], disciplina->requisitos[k]) == 0) {
                         permitido = 1;
                         break;
@@ -348,6 +348,8 @@ int professorApto(Disciplina* disciplina, Professor* professores) { //função q
 //achar prof qualificado
 Professor** buscarProfQualif(Professor** professores, int num_prof, Disciplina* disciplina, 
     int* prof_achados, const wchar_t* semestre_atual, Curso* curso) {
+//buscarProfQualif(curso->professores, curso->qtd_prof, disc, &prof_encontrado, semestre_atual, curso)
+
     //alocacao de memoria pra prof qualificado 
     Professor** qualificados = malloc(num_prof * sizeof(Professor*));
     *prof_achados = 0;
@@ -355,11 +357,11 @@ Professor** buscarProfQualif(Professor** professores, int num_prof, Disciplina* 
     for (int i = 0; i < num_prof; i++) {
     int tem_disciplina = 0;
 
-        //vai ver se o prof ja tem discplina nesse semestre
+        //vai ver se o prof ja tem disciplina nesse semestre
         for (int o = 0; o < curso->qtd_ofertas; o++) {
             Oferta* oferta = curso->ofertas[o];
-            if (oferta->professor == professores[i] &&
-            wcscmp(oferta->semestre, semestre_atual) == 0) {
+            if ((wcscmp(oferta->professor->nome, professores[i]->nome) == 0) &&
+            (wcscmp(oferta->semestre, semestre_atual) == 0)) {
             tem_disciplina = 1;
             break;
             }
@@ -399,70 +401,86 @@ void ofertarDisc(Curso* curso, const wchar_t* semestre_atual) {
     qsort(curso->disciplinas, curso->qtd_disciplinas, sizeof(Disciplina*), comparar_periodo_e_obrigatoriedade);   
     
     //so para checar!!!
-    wprintf(L"\n=== Disciplinas ordenadas ===\n");
+    wprintf(L"\n=== Disciplinas ordenadas ===\n"); //printação das disciplinas ordenadas
     for (int i = 0; i < curso->qtd_disciplinas; i++) {
         Disciplina* d = curso->disciplinas[i];
         wprintf(L"%d. %ls, Periodo: (%d)\n", i+1, d->nome, d->periodo);
     }
 
     //controle de profs ja alocados na oferta
-    int* prof_alocados = calloc(curso->qtd_prof, sizeof(int));
+    int* prof_alocados = calloc(curso->qtd_prof, sizeof(int)); //ponteiro para o numero total de professores
 
-    for (int i = 0; i < curso->qtd_disciplinas; i++) {
-        Disciplina* disc = curso->disciplinas[i];
-        int pode_ofertar = decisaoOfertaDisc(disc, curso->alunos, curso->qtd_alunos, PRAZO_MAX);
+    for (int i = 0; i < curso->qtd_disciplinas; i++) { //vai caminhar por todas as disciplinas
+        Disciplina* disc = curso->disciplinas[i]; //ponteiro para uma das disciplinas do curso
+        int pode_ofertar = decisaoOfertaDisc(disc, curso->alunos, curso->qtd_alunos, PRAZO_MAX); //1 - pode ofertar, 0 - não pode
 
         if (pode_ofertar) {
             int prof_encontrado = 0;
             Professor** quali = buscarProfQualif(curso->professores, curso->qtd_prof, 
                                                  disc, &prof_encontrado, semestre_atual, curso);
 
-            //primeiro prof n alocado ainda
-            Professor* prof_selecionado = NULL;
-            for (int p = 0; p < prof_encontrado; p++) {
-                if (!prof_alocados[p]) {
-                    prof_selecionado = quali[p];
-                    prof_alocados[p] = 1;
-                    break;
-                }
-            }
+            if (quali != NULL && quali[0] != NULL) { //verificação para saber se houve algum professor qualificado para ministrar a disciplina
 
-            if (prof_selecionado) {
-                wprintf(L"\n--------------------------------------------\n");
-                wprintf(L"\n----- Professor alocado -----\n");
-                wprintf(L"%ls: %ls \n", prof_selecionado->nome, disc->nome);
+                for (int i = 0; i < prof_encontrado; ++i) { //vai checar todos os professores aptos
+
+                }
+
+                        //primeiro prof n alocado ainda
+                        /*Professor* prof_selecionado = NULL;
+                        for (int p = 0; p < prof_encontrado; p++) {
+                            if (!prof_alocados[p]) {
+                                prof_selecionado = quali[p];
+                                prof_alocados[p] = 1;
+                                break;
+                            }
+                        }*/
                 
-                //nova oferta
-                Oferta* nova_oferta = calloc(1, sizeof(Oferta)); 
-                if (!nova_oferta) {
-                    perror("Erro ao alocar nova_oferta");
-                    free(prof_alocados); 
-                    return; 
-                }
+                        /*if (prof_selecionado) {
+                        wprintf(L"\n--------------------------------------------\n");
+                        wprintf(L"\n----- Professor alocado -----\n");
+                        wprintf(L"%ls: %ls \n", prof_selecionado->nome, disc->nome);
+                        
+                        //nova oferta
+                        Oferta* nova_oferta = calloc(1, sizeof(Oferta)); 
+                        if (!nova_oferta) {
+                            perror("Erro ao alocar nova_oferta");
+                            free(prof_alocados); 
+                            return; 
+                        }
 
-                nova_oferta->disciplina = disc;
-                nova_oferta->professor = prof_selecionado;
-                nova_oferta->semestre = wcsdup(semestre_atual);
-                if (nova_oferta->semestre == NULL && semestre_atual != NULL) {
-                    perror("Erro ao duplicar semestre para nova_oferta");
-                    free(nova_oferta); 
-                    return; 
-                }
+                        nova_oferta->disciplina = disc;
+                        nova_oferta->professor = prof_selecionado;
+                        nova_oferta->semestre = wcsdup(semestre_atual);
+                        if (nova_oferta->semestre == NULL && semestre_atual != NULL) {
+                            perror("Erro ao duplicar semestre para nova_oferta");
+                            free(nova_oferta); 
+                            return; 
+                        }
 
-                curso->ofertas[curso->qtd_ofertas++] = nova_oferta;
-           
+                        curso->ofertas[curso->qtd_ofertas++] = nova_oferta;
+                        }*/
             } else {
-                if (disc->peso >= 2) {
+                wprintf(L"\n--------------------------------------------\n");
+                wprintf(L"\nSem professor adequado para: %ls\n", disc->nome);
+                wprintf(L"\n--------------------------------------------\n");
+                wprintf(L"\nConsidere solicitar professor de outro instituto para: %ls\n", disc->nome);
+
+                /*if (disc->peso >= 2) {
                     wprintf(L"\n--------------------------------------------\n");
                     wprintf(L"\nSem professor adequado para: %ls\n", disc->nome);
                 } else {
                     wprintf(L"\n--------------------------------------------\n");
                     wprintf(L"\nConsidere solicitar professor de outro instituto para: %ls\n", disc->nome);
-                }
+                }*/
             }
+
             free(quali);
+
+        } else {
+            printf("Não eres posible ofertar esta materia: %ls!\n", disc->nome);
         }
     }
+
     free(prof_alocados);
 }
 
@@ -945,44 +963,6 @@ void freeCurso(Curso* curso) {
         i++;
     }
     free(curso->disciplinas);
-
-    /*
-    if (curso->nome != NULL) free(curso->nome);
-    if (curso->disciplinas != NULL) {
-        for (int i = 0; i < curso->qtd_disciplinas; i++) {
-            freeDisciplinas(curso->disciplinas[i]);
-        }
-        free(curso->disciplinas);
-    }
-    
-    if (curso->professores != NULL) {
-        for (int i = 0; i < curso->qtd_prof; i++) {
-            freeProf(curso->professores[i]);
-        }
-        free(curso->professores);
-    }
-    
-    if (curso->alunos != NULL) {
-        for (int i = 0; i < curso->qtd_alunos; i++) {
-            freeAluno(curso->alunos[i]);
-        }
-        free(curso->alunos);
-    }
-    
-    if (curso->salas != NULL) {
-        for (int i = 0; i < curso->qtd_salas; i++) {
-            freeSala(curso->salas[i]);
-        }
-        free(curso->salas);
-    }
-    
-    if (curso->ofertas != NULL) {
-        for (int i = 0; i < curso->qtd_ofertas; i++) {
-            freeOferta(curso->ofertas[i]);
-        }
-        free(curso->ofertas);
-    }
-        */
 
     return;
 }
